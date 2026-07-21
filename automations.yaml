@@ -218,7 +218,10 @@
         - input_number.heating_target_ground_floor
         - input_number.heating_target_first_floor
         - input_number.heating_target_chris_room
+        - input_number.heating_outside_cutoff
         - input_number.heating_freezing_cutoff
+        - input_number.heating_away_setback_target
+        - input_number.heating_on_margin
     - platform: homeassistant
       event: start
     - platform: time_pattern
@@ -234,7 +237,7 @@
         outside_temp_valid
         and is_state('binary_sensor.outside_warm_enough_for_heating_off', 'on')
       }}
-    freezing_cutoff: "{{ states('input_number.heating_freezing_cutoff') | float(4) }}"
+    freezing_cutoff: "{{ states('input_number.heating_freezing_cutoff') | float(6) }}"
     frost_protection_active: >
       {{
         outside_temp_valid
@@ -269,29 +272,34 @@
 
     ground_floor_target: "{{ states('input_number.heating_target_ground_floor') | float(20) }}"
     first_floor_target: "{{ states('input_number.heating_target_first_floor') | float(20) }}"
-    chris_target: "{{ states('input_number.heating_target_chris_room') | float(19) }}"
+    chris_target: "{{ states('input_number.heating_target_chris_room') | float(20) }}"
 
-    setback_target: 12
+    setback_target: >
+      {{ states('input_number.heating_away_setback_target') | float(12) }}
+    heating_on_margin: >
+      {{ states('input_number.heating_on_margin') | float(0.3) }}
 
     ground_floor_needs_heat: >
       {{
         ground_floor_temp_valid
         and anyone_home
-        and ground_floor_temp | float < (ground_floor_target - 0.3)
+        and ground_floor_temp | float
+          < (ground_floor_target - heating_on_margin)
       }}
 
     first_floor_needs_heat: >
       {{
         first_floor_temp_valid
         and anyone_home
-        and first_floor_temp | float < (first_floor_target - 0.3)
+        and first_floor_temp | float
+          < (first_floor_target - heating_on_margin)
       }}
 
     chris_needs_heat: >
       {{
         chris_temp_valid
         and anyone_home
-        and chris_temp | float < (chris_target - 0.3)
+        and chris_temp | float < (chris_target - heating_on_margin)
       }}
 
     any_zone_needs_heat: >
@@ -429,6 +437,7 @@
           anyone_home={{ anyone_home }},
           outside_temp={{ outside_temp }},
           freezing_cutoff={{ freezing_cutoff }},
+          heating_on_margin={{ heating_on_margin }},
           hive_available={{ hive_available }},
           desired_temp={{ desired_temp }},
           active_zones={{ active_zones }},
@@ -524,6 +533,7 @@
     - platform: state
       entity_id:
         - input_number.heating_target_chris_room
+        - input_number.heating_chris_room_frost_target
         - sensor.chris_room_temperature
         - binary_sensor.anyone_home
     - platform: homeassistant
@@ -533,8 +543,9 @@
 
   variables:
     anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
-    chris_target: "{{ states('input_number.heating_target_chris_room') | float(19) }}"
-    frost_target: 8
+    chris_target: "{{ states('input_number.heating_target_chris_room') | float(20) }}"
+    frost_target: >
+      {{ states('input_number.heating_chris_room_frost_target') | float(8) }}
     trv_target: >
       {% if anyone_home %}
         {{ chris_target }}

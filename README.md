@@ -9,7 +9,8 @@ The initial export was taken from Home Assistant 2026.7.2 on 21 July 2026.
 - `automations.yaml`
 - `scripts.yaml`
 - `scenes.yaml`
-- `packages/variables.yaml` for reusable helpers and tariff variables
+- `packages/heating.yaml` for reproducible heating settings
+- `packages/energy_tariffs.yaml` for tariff template sensors
 - `hacs/installed.yaml` for the sanitized HACS extension inventory
 - reusable Home Assistant blueprints
 
@@ -37,10 +38,22 @@ installed at export time; the empty inventory lists make that state explicit.
 
 ## Reusable variables
 
-Home Assistant packages are enabled from `configuration.yaml`. Heating targets,
-heating cutoffs, energy tariff rates, and their compatible template sensors live
-in `packages/variables.yaml`. Edit that single file to reuse or update the
-defaults on another instance.
+Home Assistant packages are enabled from `configuration.yaml`. All adjustable
+heating targets, cutoffs, frost/setback values, and the heating-on margin live in
+`packages/heating.yaml`. Energy tariff sensors are kept separately in
+`packages/energy_tariffs.yaml`.
+
+Every heating helper has an explicit `initial` value, so a clean installation
+starts with the captured Raspberry Pi settings instead of depending on runtime
+state. Home Assistant normally restores an `input_number` without `initial`
+from its previous state; none of the heating helpers use that behavior. Changes
+made from the UI remain effective until the next Home Assistant restart, when
+the version-controlled YAML default is applied again.
+
+The captured defaults are 20°C for the ground floor, first floor, and Chris
+room, 13°C for the outside warm-weather cutoff, and 6°C for the freezing
+cutoff. The previously hardcoded defaults are 12°C for the away setback, 8°C
+for Chris room frost protection, and 0.3°C for the heating-on margin.
 
 ## Heating failure behavior
 
@@ -50,8 +63,8 @@ excluded instead of being interpreted as `0°C`, so the remaining valid zones
 continue to control heating. When all three indoor sources are invalid, normal
 zone control pauses and a single persistent notification is created. Existing
 Hive state is left unchanged unless a valid outside temperature confirms that
-frost protection is required; in that degraded state, Hive uses the existing
-12°C setback rather than an unverified normal room target.
+frost protection is required; in that degraded state, Hive uses the configured
+away setback rather than an unverified normal room target.
 
 The outside temperature is validated separately. If it is unavailable,
 weather-based warm shutoff and frost detection pause while valid indoor zones
