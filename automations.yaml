@@ -1,0 +1,424 @@
+- id: '1765641005599'
+  alias: Christmas Lights On
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: d9d7af5e2e260672baa7acf1c980b5b1
+    entity_id: 7d8ba1ef727d6244e48eb16c4801bf08
+    domain: switch
+  - type: turn_on
+    device_id: ace64b2443b97655f345cb694304a8e5
+    entity_id: bba9f9474f53b55035701363c07ae5e9
+    domain: switch
+  - type: turn_on
+    device_id: b116c9f373247200ac6be7c82526afe4
+    entity_id: 347898965da2282c4a43e8437712b5e2
+    domain: switch
+  mode: single
+- id: '1765641118622'
+  alias: Christmas Lights Off
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: d9d7af5e2e260672baa7acf1c980b5b1
+    entity_id: 7d8ba1ef727d6244e48eb16c4801bf08
+    domain: switch
+  - type: turn_off
+    device_id: ace64b2443b97655f345cb694304a8e5
+    entity_id: bba9f9474f53b55035701363c07ae5e9
+    domain: switch
+  - type: turn_off
+    device_id: b116c9f373247200ac6be7c82526afe4
+    entity_id: 347898965da2282c4a43e8437712b5e2
+    domain: switch
+  mode: single
+- id: seed_rack_lights_failsafe
+  alias: seed-rack-light-failsafe
+  triggers:
+  - minutes: /5
+    trigger: time_pattern
+  actions:
+  - choose:
+    - conditions:
+      - condition: time
+        after: 07:00:00
+        before: '20:00:00'
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: switch.top_lights_seed_rack_socket_1
+          state: 'off'
+        - condition: state
+          entity_id: switch.bottom_lights_seed_rack_socket_1
+          state: 'off'
+      sequence:
+      - target:
+          entity_id:
+          - switch.top_lights_seed_rack_socket_1
+          - switch.bottom_lights_seed_rack_socket_1
+        action: switch.turn_on
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: time
+          before: 07:00:00
+        - condition: time
+          after: '20:00:00'
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: switch.top_lights_seed_rack_socket_1
+          state: 'on'
+        - condition: state
+          entity_id: switch.bottom_lights_seed_rack_socket_1
+          state: 'on'
+      sequence:
+      - target:
+          entity_id:
+          - switch.top_lights_seed_rack_socket_1
+          - switch.bottom_lights_seed_rack_socket_1
+        action: switch.turn_off
+  mode: single
+- id: '1774201134936'
+  alias: Restart Hive Hub
+  triggers:
+  - at: 04:00:00
+    trigger: time
+  actions:
+  - data:
+      level: warning
+      message: Hive restart automation started
+    action: system_log.write
+  - target:
+      entity_id: switch.smart_plug_mini_4
+    action: switch.turn_off
+  - wait_template: '{{ is_state(''switch.smart_plug_mini_4'', ''off'') }}'
+    timeout: 00:00:20
+    continue_on_timeout: true
+  - delay:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+  - target:
+      entity_id: switch.smart_plug_mini_4
+    action: switch.turn_on
+  - wait_template: '{{ is_state(''switch.smart_plug_mini_4'', ''on'') }}'
+    timeout: 00:00:30
+    continue_on_timeout: true
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ not is_state(''switch.smart_plug_mini_4'', ''on'') }}'
+      sequence:
+      - data:
+          title: Hive Hub restart failed
+          message: The smart plug did not come back on after restart automation.
+        action: persistent_notification.create
+  - data:
+      level: warning
+      message: Hive restart automation completed
+    action: system_log.write
+  mode: single
+- id: ring_motion_mode_manager
+  alias: Ring Motion Mode Manager
+  description: Manage Ring motion alerts based on home presence and time
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.anyone_home
+  - platform: time
+    at: 05:00:00
+  - platform: time
+    at: '21:00:00'
+  - platform: homeassistant
+    event: start
+  condition: []
+  action:
+  - variables:
+      anyone_home: '{{ is_state(''binary_sensor.anyone_home'', ''on'') }}'
+      is_daytime: '{{ now().strftime(''%H:%M:%S'') >= ''05:00:00'' and now().strftime(''%H:%M:%S'')
+        < ''21:00:00'' }}'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ not anyone_home }}'
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id:
+          - switch.front_door_motion_detection
+          - switch.garden_motion_detection
+      - service: system_log.write
+        data:
+          level: info
+          message: '[Ring Motion Mode Manager] Away mode active. Front Door Motion=on,
+            Garden Motion=on
+
+            '
+    - conditions:
+      - condition: template
+        value_template: '{{ anyone_home and is_daytime }}'
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id:
+          - switch.front_door_motion_detection
+      - service: switch.turn_off
+        target:
+          entity_id:
+          - switch.garden_motion_detection
+      - service: system_log.write
+        data:
+          level: info
+          message: '[Ring Motion Mode Manager] Home daytime mode active. Front Door
+            Motion=on, Garden Motion=off
+
+            '
+    - conditions:
+      - condition: template
+        value_template: '{{ anyone_home and not is_daytime }}'
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id:
+          - switch.front_door_motion_detection
+          - switch.garden_motion_detection
+      - service: system_log.write
+        data:
+          level: info
+          message: '[Ring Motion Mode Manager] Home night mode active. Front Door
+            Motion=on, Garden Motion=on
+
+            '
+  mode: single
+- alias: Heating Zone Policy Manager
+  id: heating_zone_policy_manager
+  mode: restart
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.anyone_home
+        - binary_sensor.outside_warm_enough_for_heating_off
+        - binary_sensor.hive_control_available
+        - sensor.ground_floor_avg_temperature
+        - sensor.first_floor_avg_temperature
+        - sensor.chris_room_temperature
+    - platform: state
+      entity_id:
+        - input_number.heating_target_ground_floor
+        - input_number.heating_target_first_floor
+        - input_number.heating_target_chris_room
+        - input_number.heating_freezing_cutoff
+    - platform: homeassistant
+      event: start
+    - platform: time_pattern
+      minutes: "/15"
+
+  variables:
+    anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
+    outside_warm: "{{ is_state('binary_sensor.outside_warm_enough_for_heating_off', 'on') }}"
+    hive_available: "{{ is_state('binary_sensor.hive_control_available', 'on') }}"
+    outside_temp: "{{ states('sensor.outside_temperature') | float(10) }}"
+    freezing_cutoff: "{{ states('input_number.heating_freezing_cutoff') | float(4) }}"
+
+    ground_floor_temp: "{{ states('sensor.ground_floor_avg_temperature') | float(0) }}"
+    first_floor_temp: "{{ states('sensor.first_floor_avg_temperature') | float(0) }}"
+    chris_temp: "{{ states('sensor.chris_room_temperature') | float(0) }}"
+
+    ground_floor_target: "{{ states('input_number.heating_target_ground_floor') | float(20) }}"
+    first_floor_target: "{{ states('input_number.heating_target_first_floor') | float(20) }}"
+    chris_target: "{{ states('input_number.heating_target_chris_room') | float(19) }}"
+
+    setback_target: 12
+
+    ground_floor_needs_heat: >
+      {{ anyone_home and ground_floor_temp < (ground_floor_target - 0.3) }}
+
+    first_floor_needs_heat: >
+      {{ anyone_home and first_floor_temp < (first_floor_target - 0.3) }}
+
+    chris_needs_heat: >
+      {{ anyone_home and chris_temp < (chris_target - 0.3) }}
+
+    any_zone_needs_heat: >
+      {{ ground_floor_needs_heat or first_floor_needs_heat or chris_needs_heat }}
+
+    hvac_mode: >
+      {% if outside_temp <= freezing_cutoff %}
+        heat
+      {% elif outside_warm %}
+        off
+      {% elif any_zone_needs_heat %}
+        heat
+      {% else %}
+        off
+      {% endif %}
+
+    desired_temp: >
+      {% if hvac_mode == 'heat' %}
+        {% if outside_temp <= freezing_cutoff and not anyone_home %}
+          {{ setback_target }}
+        {% else %}
+          {{ [ground_floor_target, first_floor_target, chris_target] | max }}
+        {% endif %}
+      {% else %}
+        0
+      {% endif %}
+
+    active_zones: >
+      {% set zones = [] %}
+      {% if ground_floor_needs_heat %}{% set zones = zones + ['ground_floor'] %}{% endif %}
+      {% if first_floor_needs_heat %}{% set zones = zones + ['first_floor'] %}{% endif %}
+      {% if chris_needs_heat %}{% set zones = zones + ['chris_room'] %}{% endif %}
+      {{ zones | join(', ') if zones | count > 0 else 'none' }}
+
+    policy_mode: >
+      {% if hvac_mode == 'off' %}
+        off
+      {% elif outside_temp <= freezing_cutoff and not anyone_home %}
+        frost_protection
+      {% else %}
+        zone_heating
+      {% endif %}
+
+  action:
+    - service: system_log.write
+      data:
+        level: warning
+        message: >
+          Heating Zone Policy triggered.
+          mode={{ policy_mode }},
+          hvac_mode={{ hvac_mode }},
+          anyone_home={{ anyone_home }},
+          outside_temp={{ outside_temp }},
+          freezing_cutoff={{ freezing_cutoff }},
+          hive_available={{ hive_available }},
+          desired_temp={{ desired_temp }},
+          active_zones={{ active_zones }},
+          ground_floor_temp={{ ground_floor_temp }},
+          ground_floor_target={{ ground_floor_target }},
+          first_floor_temp={{ first_floor_temp }},
+          first_floor_target={{ first_floor_target }},
+          chris_temp={{ chris_temp }},
+          chris_target={{ chris_target }}
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not hive_available }}"
+          sequence:
+            - service: persistent_notification.create
+              data:
+                title: Heating Policy Skipped
+                message: >
+                  Hive control unavailable.
+                  mode={{ policy_mode }},
+                  desired_temp={{ desired_temp }},
+                  active_zones={{ active_zones }}
+            - stop: Hive unavailable
+
+    - repeat:
+        count: 2
+        sequence:
+          - service: climate.set_hvac_mode
+            target:
+              entity_id: climate.hive_control
+            data:
+              hvac_mode: "{{ hvac_mode }}"
+            continue_on_error: true
+
+          - delay: "00:00:05"
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ hvac_mode == 'heat' }}"
+                sequence:
+                  - service: climate.set_temperature
+                    target:
+                      entity_id: climate.hive_control
+                    data:
+                      temperature: "{{ desired_temp }}"
+                    continue_on_error: true
+
+          - delay: "00:00:10"
+
+    - service: system_log.write
+      data:
+        level: warning
+        message: >
+          Heating Zone Policy completed.
+          mode={{ policy_mode }},
+          hvac_mode={{ hvac_mode }},
+          active_zones={{ active_zones }},
+          climate_state={{ states('climate.hive_control') }},
+          target_now={{ state_attr('climate.hive_control', 'temperature') }}
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ hvac_mode == 'heat' and
+                   (state_attr('climate.hive_control', 'temperature') | float(-999)) != (desired_temp | float) }}
+          sequence:
+            - service: persistent_notification.create
+              data:
+                title: Heating Policy Warning
+                message: >
+                  Hive may not have accepted the target.
+                  mode={{ policy_mode }},
+                  expected={{ desired_temp }},
+                  actual={{ state_attr('climate.hive_control', 'temperature') }},
+                  state={{ states('climate.hive_control') }},
+                  active_zones={{ active_zones }}
+
+- alias: Chris Room TRV Manager
+  id: chris_room_trv_manager
+  mode: restart
+  trigger:
+    - platform: state
+      entity_id:
+        - input_number.heating_target_chris_room
+        - sensor.chris_room_temperature
+        - binary_sensor.anyone_home
+    - platform: homeassistant
+      event: start
+    - platform: time_pattern
+      minutes: "/10"
+
+  variables:
+    anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
+    chris_target: "{{ states('input_number.heating_target_chris_room') | float(19) }}"
+    frost_target: 8
+    trv_target: >
+      {% if anyone_home %}
+        {{ chris_target }}
+      {% else %}
+        {{ frost_target }}
+      {% endif %}
+
+  action:
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.chris_room_trv
+      data:
+        temperature: "{{ trv_target }}"
+
+    - service: system_log.write
+      data:
+        level: warning
+        message: >
+          Chris Room TRV updated.
+          anyone_home={{ anyone_home }},
+          trv_target={{ trv_target }},
+          current_temp={{ states('sensor.chris_room_temperature') }}

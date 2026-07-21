@@ -216,3 +216,35 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# macOS
+.DS_Store
+
+# Home Assistant secrets and runtime state
+secrets.yaml
+.storage/
+.cloud/
+.cache/
+.ha_run.lock
+.omv_cookies.json
+*.cookies.json
+home-assistant_v2.db*
+home-assistant.log*
+*.log
+backups/
+deps/
+tts/
+media/
+image/
+ssl/
+share/
+
+# Generated/downloaded integration and media content
+custom_components/
+www/media/
+__pycache__/
+*.py[cod]
+
+# Local exports
+ha-config-export*.tar.gz
+*.tar.gz
