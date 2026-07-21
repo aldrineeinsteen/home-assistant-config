@@ -226,14 +226,46 @@
 
   variables:
     anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
-    outside_warm: "{{ is_state('binary_sensor.outside_warm_enough_for_heating_off', 'on') }}"
     hive_available: "{{ is_state('binary_sensor.hive_control_available', 'on') }}"
-    outside_temp: "{{ states('sensor.outside_temperature') | float(10) }}"
+    outside_temp: "{{ states('sensor.outside_temperature') }}"
+    outside_temp_valid: "{{ is_number(outside_temp) }}"
+    outside_warm: >
+      {{
+        outside_temp_valid
+        and is_state('binary_sensor.outside_warm_enough_for_heating_off', 'on')
+      }}
     freezing_cutoff: "{{ states('input_number.heating_freezing_cutoff') | float(4) }}"
+    frost_protection_active: >
+      {{
+        outside_temp_valid
+        and outside_temp | float <= freezing_cutoff | float
+      }}
 
-    ground_floor_temp: "{{ states('sensor.ground_floor_avg_temperature') | float(0) }}"
-    first_floor_temp: "{{ states('sensor.first_floor_avg_temperature') | float(0) }}"
-    chris_temp: "{{ states('sensor.chris_room_temperature') | float(0) }}"
+    ground_floor_temp: "{{ states('sensor.ground_floor_avg_temperature') }}"
+    first_floor_temp: "{{ states('sensor.first_floor_avg_temperature') }}"
+    chris_temp: "{{ states('sensor.chris_room_temperature') }}"
+
+    ground_floor_temp_valid: "{{ is_number(ground_floor_temp) }}"
+    first_floor_temp_valid: "{{ is_number(first_floor_temp) }}"
+    chris_temp_valid: "{{ is_number(chris_temp) }}"
+    indoor_temperature_available: >
+      {{
+        ground_floor_temp_valid
+        or first_floor_temp_valid
+        or chris_temp_valid
+      }}
+    invalid_zones: >
+      {% set zones = [] %}
+      {% if not ground_floor_temp_valid %}
+        {% set zones = zones + ['ground_floor'] %}
+      {% endif %}
+      {% if not first_floor_temp_valid %}
+        {% set zones = zones + ['first_floor'] %}
+      {% endif %}
+      {% if not chris_temp_valid %}
+        {% set zones = zones + ['chris_room'] %}
+      {% endif %}
+      {{ zones | join(', ') if zones | count > 0 else 'none' }}
 
     ground_floor_target: "{{ states('input_number.heating_target_ground_floor') | float(20) }}"
     first_floor_target: "{{ states('input_number.heating_target_first_floor') | float(20) }}"
@@ -242,20 +274,34 @@
     setback_target: 12
 
     ground_floor_needs_heat: >
-      {{ anyone_home and ground_floor_temp < (ground_floor_target - 0.3) }}
+      {{
+        ground_floor_temp_valid
+        and anyone_home
+        and ground_floor_temp | float < (ground_floor_target - 0.3)
+      }}
 
     first_floor_needs_heat: >
-      {{ anyone_home and first_floor_temp < (first_floor_target - 0.3) }}
+      {{
+        first_floor_temp_valid
+        and anyone_home
+        and first_floor_temp | float < (first_floor_target - 0.3)
+      }}
 
     chris_needs_heat: >
-      {{ anyone_home and chris_temp < (chris_target - 0.3) }}
+      {{
+        chris_temp_valid
+        and anyone_home
+        and chris_temp | float < (chris_target - 0.3)
+      }}
 
     any_zone_needs_heat: >
       {{ ground_floor_needs_heat or first_floor_needs_heat or chris_needs_heat }}
 
     hvac_mode: >
-      {% if outside_temp <= freezing_cutoff %}
+      {% if frost_protection_active %}
         heat
+      {% elif not indoor_temperature_available %}
+        skip
       {% elif outside_warm %}
         off
       {% elif any_zone_needs_heat %}
@@ -266,7 +312,8 @@
 
     desired_temp: >
       {% if hvac_mode == 'heat' %}
-        {% if outside_temp <= freezing_cutoff and not anyone_home %}
+        {% if frost_protection_active
+          and (not anyone_home or not indoor_temperature_available) %}
           {{ setback_target }}
         {% else %}
           {{ [ground_floor_target, first_floor_target, chris_target] | max }}
@@ -283,15 +330,95 @@
       {{ zones | join(', ') if zones | count > 0 else 'none' }}
 
     policy_mode: >
-      {% if hvac_mode == 'off' %}
+      {% if hvac_mode == 'skip' %}
+        sensor_failure
+      {% elif hvac_mode == 'off' %}
         off
-      {% elif outside_temp <= freezing_cutoff and not anyone_home %}
+      {% elif frost_protection_active
+        and (not anyone_home or not indoor_temperature_available) %}
         frost_protection
       {% else %}
         zone_heating
       {% endif %}
 
   action:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not indoor_temperature_available }}"
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >
+                        {{
+                          not has_value(
+                            'persistent_notification.heating_indoor_temperature_unavailable'
+                          )
+                        }}
+                  sequence:
+                    - service: persistent_notification.create
+                      data:
+                        notification_id: heating_indoor_temperature_unavailable
+                        title: Heating indoor temperatures unavailable
+                        message: >
+                          Ground floor, first floor, and Chris room temperature
+                          sources are unavailable. Normal zone control is paused.
+                          Frost protection remains active only when the outside
+                          temperature is valid and at or below the freezing cutoff.
+                          Outside temperature={{ outside_temp }},
+                          frost protection={{ frost_protection_active }}.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  indoor_temperature_available
+                  and has_value(
+                    'persistent_notification.heating_indoor_temperature_unavailable'
+                  )
+                }}
+          sequence:
+            - service: persistent_notification.dismiss
+              data:
+                notification_id: heating_indoor_temperature_unavailable
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not outside_temp_valid }}"
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >
+                        {{
+                          not has_value(
+                            'persistent_notification.heating_outside_temperature_unavailable'
+                          )
+                        }}
+                  sequence:
+                    - service: persistent_notification.create
+                      data:
+                        notification_id: heating_outside_temperature_unavailable
+                        title: Heating outside temperature unavailable
+                        message: >
+                          The weather-based outside temperature is unavailable.
+                          Warm-weather shutoff and frost detection are suspended;
+                          valid indoor zones continue normal temperature control.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  outside_temp_valid
+                  and has_value(
+                    'persistent_notification.heating_outside_temperature_unavailable'
+                  )
+                }}
+          sequence:
+            - service: persistent_notification.dismiss
+              data:
+                notification_id: heating_outside_temperature_unavailable
+
     - service: system_log.write
       data:
         level: warning
@@ -305,12 +432,20 @@
           hive_available={{ hive_available }},
           desired_temp={{ desired_temp }},
           active_zones={{ active_zones }},
+          invalid_zones={{ invalid_zones }},
           ground_floor_temp={{ ground_floor_temp }},
           ground_floor_target={{ ground_floor_target }},
           first_floor_temp={{ first_floor_temp }},
           first_floor_target={{ first_floor_target }},
           chris_temp={{ chris_temp }},
           chris_target={{ chris_target }}
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ hvac_mode == 'skip' }}"
+          sequence:
+            - stop: All indoor temperature sources are unavailable
 
     - choose:
         - conditions:

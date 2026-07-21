@@ -42,6 +42,26 @@ heating cutoffs, energy tariff rates, and their compatible template sensors live
 in `packages/variables.yaml`. Edit that single file to reuse or update the
 defaults on another instance.
 
+## Heating failure behavior
+
+The heating policy treats the ground floor, first floor, and Chris room
+temperature sources independently. An unavailable or non-numeric source is
+excluded instead of being interpreted as `0°C`, so the remaining valid zones
+continue to control heating. When all three indoor sources are invalid, normal
+zone control pauses and a single persistent notification is created. Existing
+Hive state is left unchanged unless a valid outside temperature confirms that
+frost protection is required; in that degraded state, Hive uses the existing
+12°C setback rather than an unverified normal room target.
+
+The outside temperature is validated separately. If it is unavailable,
+weather-based warm shutoff and frost detection pause while valid indoor zones
+continue normal temperature control. A persistent notification records the
+failure and is dismissed automatically after the source recovers. Frost
+protection therefore runs only from a valid outside reading at or below the
+configured freezing cutoff.
+
+Household presence includes Aldrine, Evangeline, Chris, and Keona.
+
 ## Workflow
 
 1. Edit configuration on a branch.
