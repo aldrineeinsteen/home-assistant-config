@@ -39,7 +39,7 @@ installed at export time; the empty inventory lists make that state explicit.
 ## Reusable variables
 
 Home Assistant packages are enabled from `configuration.yaml`. All adjustable
-heating targets, cutoffs, frost/setback values, and the heating-on margin live in
+heating targets, cutoffs, frost/setback values, and demand hysteresis live in
 `packages/heating.yaml`. Energy tariff sensors are kept separately in
 `packages/energy_tariffs.yaml`.
 
@@ -54,7 +54,7 @@ again.
 The captured defaults are 20°C for the ground floor, first floor, and Chris
 room, 13°C for the outside warm-weather cutoff, and 6°C for the freezing
 cutoff. The previously hardcoded defaults are 12°C for the away setback, 8°C
-for Chris room frost protection, and 0.3°C for the heating-on margin.
+for Chris room frost protection, and 0.3°C for demand hysteresis.
 
 ## Heating modes
 
@@ -94,10 +94,60 @@ ended early with `script.heating_cancel_boost`; manual modes can be cleared with
 `script.heating_clear_manual_mode`.
 
 Away, Holiday, and Off suppress normal demand but do not suppress verified
-frost protection. During frost protection they use the configured away setback,
-while Chris room's TRV uses its configured frost target. If all indoor sensors
-are invalid, Boost is suppressed unless frost protection is required, in which
-case the lower away setback is used.
+frost protection. Frost-only boiler demand uses the configured 12°C away
+setback rather than the high boiler-call temperature, while Chris room's TRV
+uses its configured frost target. If all indoor sensors are invalid, Boost is
+suppressed unless frost protection is required, in which case the lower away
+setback is used.
+
+## Boiler demand policy
+
+The central Hive entity is treated as a boiler switch controlled through its
+thermostat interface, not as another room zone. Read-only inspection of the live
+entity showed that `climate.hive_control` has its own room reading, a separate
+target, `off`/`heat` modes, an `hvac_action`, and a supported target range of
+7–35°C. The room TRVs expose their own readings and HVAC actions independently.
+
+For normal zone demand, the policy uses a dedicated boiler-call temperature
+rather than copying a comfort target to Hive. A zone target such as 20°C can be
+below Hive's own room reading and therefore fail to call for heat even when
+another zone is cold. `input_number.heating_boiler_call_temperature` defaults
+to 30°C and is constrained to 24–35°C. It is a demand signal: room comfort
+remains controlled by the zone targets and TRVs. Frost-only demand retains the
+lower away-setback target so cold-weather protection does not become an
+unconditional high-temperature boiler call.
+
+Each valid zone has an explicit demand binary sensor. Home, Sleep, and Boost
+modes make a zone eligible; Away, Holiday, and Off suppress normal zone demand.
+A zone starts requesting heat below `target - hysteresis` and keeps requesting
+until it reaches `target + hysteresis`. Invalid zones become unavailable and do
+not block other valid zones. Boost uses the Boost target; scheduled Home/Sleep
+targets still use the schedule block's optional `target` value.
+
+The boiler defaults to a 10-minute minimum-on period and a 5-minute minimum-off
+period. Manual Off can end an on period immediately. Verified frost demand can
+start the boiler during the minimum-off period. The timing is based on the last
+acknowledged Hive HVAC-mode change, so it is conservative for a few minutes
+after Home Assistant starts.
+
+Commands are idempotent: HVAC mode and target are sent only when the live Hive
+state differs. Each command is allowed one retry, and only after a 15-second
+acknowledgement timeout. Target acknowledgement uses the configurable 0.2°C
+tolerance instead of exact floating-point equality.
+
+Dashboard and troubleshooting entities are:
+
+- `binary_sensor.heating_ground_floor_demand`
+- `binary_sensor.heating_first_floor_demand`
+- `binary_sensor.heating_chris_room_demand`
+- `binary_sensor.heating_boiler_demand`
+- `sensor.heating_active_zones`
+- `sensor.heating_requested_target`
+- `sensor.heating_boiler_lockout_reason`
+
+Lockout reasons distinguish minimum-on/off timing, manual and presence modes,
+warm-weather cutoff, unavailable Hive control, invalid modes, all indoor
+sensors failing, and the ordinary absence of zone demand.
 
 ## Heating failure behavior
 

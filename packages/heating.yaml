@@ -63,7 +63,7 @@ input_number:
     icon: mdi:snowflake-thermometer
 
   heating_on_margin:
-    name: Heating On Temperature Margin
+    name: Heating Demand Hysteresis
     initial: 0.3
     min: 0.1
     max: 2
@@ -106,6 +106,42 @@ input_number:
     step: 1
     unit_of_measurement: min
     icon: mdi:home-export-outline
+
+  heating_boiler_call_temperature:
+    name: Heating Boiler Call Temperature
+    initial: 30
+    min: 24
+    max: 35
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:fire-circle
+
+  heating_minimum_boiler_on_minutes:
+    name: Heating Minimum Boiler On Time
+    initial: 10
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: min
+    icon: mdi:timer-lock-outline
+
+  heating_minimum_boiler_off_minutes:
+    name: Heating Minimum Boiler Off Time
+    initial: 5
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: min
+    icon: mdi:timer-lock-open-outline
+
+  heating_hive_acknowledgement_tolerance:
+    name: Heating Hive Acknowledgement Tolerance
+    initial: 0.2
+    min: 0.1
+    max: 1
+    step: 0.1
+    unit_of_measurement: "°C"
+    icon: mdi:approximately-equal
 
 input_select:
   heating_manual_mode:
@@ -245,6 +281,418 @@ template:
           {% else %}
             Stable presence selected Home
           {% endif %}
+
+      - name: Heating Ground Floor Effective Target
+        unique_id: heating_ground_floor_effective_target
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        icon: mdi:home-thermometer
+        availability: >
+          {{
+            states('sensor.heating_effective_mode')
+              in ['Home', 'Sleep', 'Away', 'Holiday', 'Boost', 'Off']
+            and is_number(
+              states('input_number.heating_target_ground_floor')
+            )
+            and is_number(states('input_number.heating_boost_target'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set scheduled =
+            state_attr('schedule.heating_weekly_mode', 'target') %}
+          {% if mode == 'Boost' %}
+            {{ states('input_number.heating_boost_target') | float }}
+          {% elif mode in ['Home', 'Sleep']
+            and is_state('schedule.heating_weekly_mode', 'on')
+            and is_number(scheduled) %}
+            {{ [[scheduled | float, 15] | max, 24] | min }}
+          {% else %}
+            {{ states('input_number.heating_target_ground_floor') | float }}
+          {% endif %}
+
+      - name: Heating First Floor Effective Target
+        unique_id: heating_first_floor_effective_target
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        icon: mdi:home-floor-1
+        availability: >
+          {{
+            states('sensor.heating_effective_mode')
+              in ['Home', 'Sleep', 'Away', 'Holiday', 'Boost', 'Off']
+            and is_number(
+              states('input_number.heating_target_first_floor')
+            )
+            and is_number(states('input_number.heating_boost_target'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set scheduled =
+            state_attr('schedule.heating_weekly_mode', 'target') %}
+          {% if mode == 'Boost' %}
+            {{ states('input_number.heating_boost_target') | float }}
+          {% elif mode in ['Home', 'Sleep']
+            and is_state('schedule.heating_weekly_mode', 'on')
+            and is_number(scheduled) %}
+            {{ [[scheduled | float, 15] | max, 24] | min }}
+          {% else %}
+            {{ states('input_number.heating_target_first_floor') | float }}
+          {% endif %}
+
+      - name: Heating Chris Room Effective Target
+        unique_id: heating_chris_room_effective_target
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        icon: mdi:radiator
+        availability: >
+          {{
+            states('sensor.heating_effective_mode')
+              in ['Home', 'Sleep', 'Away', 'Holiday', 'Boost', 'Off']
+            and is_number(
+              states('input_number.heating_target_chris_room')
+            )
+            and is_number(states('input_number.heating_boost_target'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set scheduled =
+            state_attr('schedule.heating_weekly_mode', 'target') %}
+          {% if mode == 'Boost' %}
+            {{ states('input_number.heating_boost_target') | float }}
+          {% elif mode in ['Home', 'Sleep']
+            and is_state('schedule.heating_weekly_mode', 'on')
+            and is_number(scheduled) %}
+            {{ [[scheduled | float, 15] | max, 24] | min }}
+          {% else %}
+            {{ states('input_number.heating_target_chris_room') | float }}
+          {% endif %}
+
+  - binary_sensor:
+      - name: Heating Ground Floor Demand
+        unique_id: heating_ground_floor_demand
+        icon: mdi:radiator
+        availability: >
+          {{
+            is_number(states('sensor.ground_floor_avg_temperature'))
+            and is_number(
+              states('sensor.heating_ground_floor_effective_target')
+            )
+            and is_number(states('input_number.heating_on_margin'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set current =
+            states('sensor.ground_floor_avg_temperature') | float %}
+          {% set target =
+            states('sensor.heating_ground_floor_effective_target') | float %}
+          {% set hysteresis =
+            states('input_number.heating_on_margin') | float(0.3) %}
+          {% if mode not in ['Home', 'Sleep', 'Boost'] %}
+            false
+          {% elif this.state == 'on' %}
+            {{ current < target + hysteresis }}
+          {% else %}
+            {{ current < target - hysteresis }}
+          {% endif %}
+        attributes:
+          current_temperature: >
+            {{ states('sensor.ground_floor_avg_temperature') }}
+          target_temperature: >
+            {{ states('sensor.heating_ground_floor_effective_target') }}
+          mode: "{{ states('sensor.heating_effective_mode') }}"
+          hysteresis: "{{ states('input_number.heating_on_margin') }}"
+
+      - name: Heating First Floor Demand
+        unique_id: heating_first_floor_demand
+        icon: mdi:radiator
+        availability: >
+          {{
+            is_number(states('sensor.first_floor_avg_temperature'))
+            and is_number(
+              states('sensor.heating_first_floor_effective_target')
+            )
+            and is_number(states('input_number.heating_on_margin'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set current =
+            states('sensor.first_floor_avg_temperature') | float %}
+          {% set target =
+            states('sensor.heating_first_floor_effective_target') | float %}
+          {% set hysteresis =
+            states('input_number.heating_on_margin') | float(0.3) %}
+          {% if mode not in ['Home', 'Sleep', 'Boost'] %}
+            false
+          {% elif this.state == 'on' %}
+            {{ current < target + hysteresis }}
+          {% else %}
+            {{ current < target - hysteresis }}
+          {% endif %}
+        attributes:
+          current_temperature: >
+            {{ states('sensor.first_floor_avg_temperature') }}
+          target_temperature: >
+            {{ states('sensor.heating_first_floor_effective_target') }}
+          mode: "{{ states('sensor.heating_effective_mode') }}"
+          hysteresis: "{{ states('input_number.heating_on_margin') }}"
+
+      - name: Heating Chris Room Demand
+        unique_id: heating_chris_room_demand
+        icon: mdi:radiator
+        availability: >
+          {{
+            is_number(states('sensor.chris_room_temperature'))
+            and is_number(
+              states('sensor.heating_chris_room_effective_target')
+            )
+            and is_number(states('input_number.heating_on_margin'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set current = states('sensor.chris_room_temperature') | float %}
+          {% set target =
+            states('sensor.heating_chris_room_effective_target') | float %}
+          {% set hysteresis =
+            states('input_number.heating_on_margin') | float(0.3) %}
+          {% if mode not in ['Home', 'Sleep', 'Boost'] %}
+            false
+          {% elif this.state == 'on' %}
+            {{ current < target + hysteresis }}
+          {% else %}
+            {{ current < target - hysteresis }}
+          {% endif %}
+        attributes:
+          current_temperature: "{{ states('sensor.chris_room_temperature') }}"
+          target_temperature: >
+            {{ states('sensor.heating_chris_room_effective_target') }}
+          mode: "{{ states('sensor.heating_effective_mode') }}"
+          hysteresis: "{{ states('input_number.heating_on_margin') }}"
+
+      - name: Heating Boiler Demand
+        unique_id: heating_boiler_demand
+        icon: mdi:fire
+        state: >
+          {% set outside = states('sensor.outside_temperature') %}
+          {% set freezing =
+            states('input_number.heating_freezing_cutoff') %}
+          {% set frost =
+            is_number(outside)
+            and is_number(freezing)
+            and outside | float <= freezing | float %}
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set weather_allows =
+            mode == 'Boost'
+            or not is_state(
+              'binary_sensor.outside_warm_enough_for_heating_off', 'on'
+            ) %}
+          {% set zone_demand =
+            is_state('binary_sensor.heating_ground_floor_demand', 'on')
+            or is_state('binary_sensor.heating_first_floor_demand', 'on')
+            or is_state('binary_sensor.heating_chris_room_demand', 'on') %}
+          {{ frost or (weather_allows and zone_demand) }}
+        attributes:
+          source: >
+            {% set outside = states('sensor.outside_temperature') %}
+            {% set freezing =
+              states('input_number.heating_freezing_cutoff') %}
+            {% set frost =
+              is_number(outside) and is_number(freezing)
+              and outside | float <= freezing | float %}
+            {% set zone_demand =
+              is_state('binary_sensor.heating_ground_floor_demand', 'on')
+              or is_state('binary_sensor.heating_first_floor_demand', 'on')
+              or is_state('binary_sensor.heating_chris_room_demand', 'on') %}
+            {% if frost and zone_demand %}
+              zone_and_frost
+            {% elif frost %}
+              frost_protection
+            {% elif is_state(
+              'binary_sensor.outside_warm_enough_for_heating_off', 'on'
+            ) and not is_state('sensor.heating_effective_mode', 'Boost') %}
+              warm_weather_cutoff
+            {% elif zone_demand %}
+              zone_demand
+            {% else %}
+              none
+            {% endif %}
+
+  - sensor:
+      - name: Heating Active Zones
+        unique_id: heating_active_zones
+        icon: mdi:home-thermometer
+        state: >
+          {% set zones = [] %}
+          {% if is_state('binary_sensor.heating_ground_floor_demand', 'on') %}
+            {% set zones = zones + ['ground_floor'] %}
+          {% endif %}
+          {% if is_state('binary_sensor.heating_first_floor_demand', 'on') %}
+            {% set zones = zones + ['first_floor'] %}
+          {% endif %}
+          {% if is_state('binary_sensor.heating_chris_room_demand', 'on') %}
+            {% set zones = zones + ['chris_room'] %}
+          {% endif %}
+          {{ zones | join(', ') if zones | count > 0 else 'none' }}
+        attributes:
+          invalid_zones: >
+            {% set zones = [] %}
+            {% if not is_number(
+              states('sensor.ground_floor_avg_temperature')) %}
+              {% set zones = zones + ['ground_floor'] %}
+            {% endif %}
+            {% if not is_number(
+              states('sensor.first_floor_avg_temperature')) %}
+              {% set zones = zones + ['first_floor'] %}
+            {% endif %}
+            {% if not is_number(states('sensor.chris_room_temperature')) %}
+              {% set zones = zones + ['chris_room'] %}
+            {% endif %}
+            {{ zones | join(', ') if zones | count > 0 else 'none' }}
+
+      - name: Heating Boiler Lockout Reason
+        unique_id: heating_boiler_lockout_reason
+        icon: mdi:lock-clock
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set valid_mode =
+            mode in ['Home', 'Sleep', 'Away', 'Holiday', 'Boost', 'Off'] %}
+          {% set indoor_available =
+            is_number(states('sensor.ground_floor_avg_temperature'))
+            or is_number(states('sensor.first_floor_avg_temperature'))
+            or is_number(states('sensor.chris_room_temperature')) %}
+          {% set outside = states('sensor.outside_temperature') %}
+          {% set freezing =
+            states('input_number.heating_freezing_cutoff') %}
+          {% set frost =
+            is_number(outside) and is_number(freezing)
+            and outside | float <= freezing | float %}
+          {% set demand = is_state('binary_sensor.heating_boiler_demand', 'on') %}
+          {% set current_hvac = states('climate.hive_control') %}
+          {% set hive = states.climate.hive_control %}
+          {% set changed =
+            hive.last_changed if hive is defined else now() %}
+          {% set elapsed = as_timestamp(now())
+            - as_timestamp(changed, as_timestamp(now())) %}
+          {% set minimum_on =
+            states('input_number.heating_minimum_boiler_on_minutes')
+            | float(10) * 60 %}
+          {% set minimum_off =
+            states('input_number.heating_minimum_boiler_off_minutes')
+            | float(5) * 60 %}
+          {% if not is_state('binary_sensor.hive_control_available', 'on') %}
+            hive_unavailable
+          {% elif not valid_mode %}
+            invalid_mode
+          {% elif not indoor_available and not frost %}
+            all_indoor_sensors_invalid
+          {% elif mode == 'Off' and not frost %}
+            manual_off
+          {% elif demand and current_hvac == 'off'
+            and elapsed < minimum_off and not frost %}
+            minimum_off
+          {% elif not demand and current_hvac == 'heat'
+            and elapsed < minimum_on %}
+            minimum_on
+          {% elif mode == 'Away' and not frost %}
+            mode_away
+          {% elif mode == 'Holiday' and not frost %}
+            mode_holiday
+          {% elif is_state(
+            'binary_sensor.outside_warm_enough_for_heating_off', 'on'
+          ) and mode != 'Boost' and not frost %}
+            warm_weather_cutoff
+          {% elif not demand %}
+            no_zone_demand
+          {% else %}
+            none
+          {% endif %}
+        attributes:
+          current_hvac_mode: "{{ states('climate.hive_control') }}"
+          seconds_since_hvac_change: >
+            {% set hive = states.climate.hive_control %}
+            {% set changed =
+              hive.last_changed if hive is defined else now() %}
+            {{
+              (
+                as_timestamp(now())
+                - as_timestamp(
+                  changed,
+                  as_timestamp(now())
+                )
+              ) | int(0)
+            }}
+          minimum_on_minutes: >
+            {{ states('input_number.heating_minimum_boiler_on_minutes') }}
+          minimum_off_minutes: >
+            {{ states('input_number.heating_minimum_boiler_off_minutes') }}
+
+      - name: Heating Requested Target
+        unique_id: heating_requested_target
+        icon: mdi:thermometer-chevron-up
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set zone_demand =
+            is_state('binary_sensor.heating_ground_floor_demand', 'on')
+            or is_state('binary_sensor.heating_first_floor_demand', 'on')
+            or is_state('binary_sensor.heating_chris_room_demand', 'on') %}
+          {% set zone_call =
+            zone_demand
+            and (
+              mode == 'Boost'
+              or not is_state(
+                'binary_sensor.outside_warm_enough_for_heating_off', 'on'
+              )
+            ) %}
+          {% set outside = states('sensor.outside_temperature') %}
+          {% set freezing =
+            states('input_number.heating_freezing_cutoff') %}
+          {% set frost =
+            is_number(outside) and is_number(freezing)
+            and outside | float <= freezing | float %}
+          {% set current_target =
+            state_attr('climate.hive_control', 'temperature') %}
+          {% if zone_call %}
+            {{
+              states('input_number.heating_boiler_call_temperature')
+              | float(30) | round(1)
+            }}
+          {% elif frost %}
+            {{
+              states('input_number.heating_away_setback_target')
+              | float(12) | round(1)
+            }}
+          {% elif is_state(
+            'sensor.heating_boiler_lockout_reason', 'minimum_on'
+          ) and is_number(current_target) %}
+            {{ current_target | float | round(1) }}
+          {% elif is_state(
+            'sensor.heating_boiler_lockout_reason', 'minimum_on'
+          ) %}
+            {{
+              states('input_number.heating_boiler_call_temperature')
+              | float(30) | round(1)
+            }}
+          {% else %}
+            none
+          {% endif %}
+        attributes:
+          strategy: >
+            {% if is_state(
+              'sensor.heating_boiler_lockout_reason', 'minimum_on'
+            ) %}
+              retained_minimum_on_target
+            {% elif is_state_attr(
+              'binary_sensor.heating_boiler_demand',
+              'source',
+              'frost_protection'
+            ) %}
+              frost_setback
+            {% else %}
+              dedicated_boiler_call_temperature
+            {% endif %}
+          configured_temperature: >
+            {{ states('input_number.heating_boiler_call_temperature') }}
 
 script:
   heating_start_boost:
