@@ -1,0 +1,30 @@
+schema_version: 1
+exported_at: "2026-07-21"
+home_assistant_version: "2026.7.2"
+
+hacs:
+  repository: hacs/integration
+  version: "2.0.5"
+  archived_repositories: []
+  ignored_repositories: []
+  renamed_repositories: []
+
+integrations:
+  - domain: bambu_lab
+    name: Bambu Lab
+    repository: greghesp/ha-bambulab
+    version: "2.2.22"
+
+  - domain: octopus_energy
+    name: Octopus Energy
+    repository: BottlecapDave/HomeAssistant-OctopusEnergy
+    version: "18.3.3"
+
+  - domain: openmediavault
+    name: OpenMediaVault
+    repository: tomae/homeassistant-openmediavault
+    version: "0.0.0"
+
+frontend_plugins: []
+lovelace_resources: []
+custom_repositories: []

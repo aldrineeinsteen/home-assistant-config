@@ -1,6 +1,9 @@
 # Loads default set of integrations. Do not remove.
 default_config:
 
+homeassistant:
+  packages: !include_dir_named packages
+
 http:
   use_x_forwarded_for: true
   trusted_proxies:
@@ -13,42 +16,6 @@ frontend:
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
-
-input_number:
-  heating_target_ground_floor:
-    name: Heating Target Ground Floor
-    min: 15
-    max: 24
-    step: 0.5
-    unit_of_measurement: "°C"
-
-  heating_target_first_floor:
-    name: Heating Target First Floor
-    min: 15
-    max: 24
-    step: 0.5
-    unit_of_measurement: "°C"
-
-  heating_target_chris_room:
-    name: Heating Target Chris Room
-    min: 15
-    max: 24
-    step: 0.5
-    unit_of_measurement: "°C"
-
-  heating_outside_cutoff:
-    name: Heating Outside Cutoff
-    min: 10
-    max: 22
-    step: 0.5
-    unit_of_measurement: "°C"
-
-  heating_freezing_cutoff:
-    name: Heating Freezing Cutoff
-    min: 2
-    max: 7
-    step: 0.5
-    unit_of_measurement: "°C"
 
 template:
   - binary_sensor:
@@ -121,31 +88,6 @@ template:
         unit_of_measurement: "°C"
         state: >
           {{ state_attr('weather.forecast_home', 'temperature') }}
-
-  - sensor:
-      - name: "Electricity Unit Rate"
-        unit_of_measurement: "£/kWh"
-        state: 0.2058
-
-      - name: "Electricity Standing Charge Daily"
-        unit_of_measurement: "£"
-        state: 0.4728
-
-      - name: "Gas Unit Rate"
-        unit_of_measurement: "£/kWh"
-        state: 0.0541
-
-      - name: "Gas Standing Charge Daily"
-        unit_of_measurement: "£"
-        state: 0.311
-
-      - name: "Electricity Standing Charge Monthly"
-        unit_of_measurement: "£"
-        state: "{{ (0.4728 * 30) | round(2) }}"
-
-      - name: "Gas Standing Charge Monthly"
-        unit_of_measurement: "£"
-        state: "{{ (0.311 * 30) | round(2) }}"
 
   - sensor:
       - name: Ground Floor Avg Temperature
