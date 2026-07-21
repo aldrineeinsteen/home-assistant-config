@@ -210,9 +210,11 @@
         - binary_sensor.anyone_home
         - binary_sensor.outside_warm_enough_for_heating_off
         - binary_sensor.hive_control_available
+        - sensor.heating_effective_mode
         - sensor.ground_floor_avg_temperature
         - sensor.first_floor_avg_temperature
         - sensor.chris_room_temperature
+        - schedule.heating_weekly_mode
     - platform: state
       entity_id:
         - input_number.heating_target_ground_floor
@@ -222,6 +224,7 @@
         - input_number.heating_freezing_cutoff
         - input_number.heating_away_setback_target
         - input_number.heating_on_margin
+        - input_number.heating_boost_target
     - platform: homeassistant
       event: start
     - platform: time_pattern
@@ -229,6 +232,11 @@
 
   variables:
     anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
+    effective_mode: "{{ states('sensor.heating_effective_mode') }}"
+    effective_mode_valid: >
+      {{
+        effective_mode in ['Home', 'Sleep', 'Away', 'Holiday', 'Boost', 'Off']
+      }}
     hive_available: "{{ is_state('binary_sensor.hive_control_available', 'on') }}"
     outside_temp: "{{ states('sensor.outside_temperature') }}"
     outside_temp_valid: "{{ is_number(outside_temp) }}"
@@ -270,19 +278,51 @@
       {% endif %}
       {{ zones | join(', ') if zones | count > 0 else 'none' }}
 
-    ground_floor_target: "{{ states('input_number.heating_target_ground_floor') | float(20) }}"
-    first_floor_target: "{{ states('input_number.heating_target_first_floor') | float(20) }}"
-    chris_target: "{{ states('input_number.heating_target_chris_room') | float(20) }}"
+    schedule_target: >
+      {{ state_attr('schedule.heating_weekly_mode', 'target') }}
+    schedule_target_valid: >
+      {{
+        is_state('schedule.heating_weekly_mode', 'on')
+        and is_number(schedule_target)
+      }}
+    ground_floor_base_target: >
+      {{ states('input_number.heating_target_ground_floor') | float(20) }}
+    first_floor_base_target: >
+      {{ states('input_number.heating_target_first_floor') | float(20) }}
+    chris_base_target: >
+      {{ states('input_number.heating_target_chris_room') | float(20) }}
+    ground_floor_target: >
+      {{
+        [[schedule_target | float, 15] | max, 24] | min
+        if schedule_target_valid and effective_mode in ['Home', 'Sleep']
+        else ground_floor_base_target
+      }}
+    first_floor_target: >
+      {{
+        [[schedule_target | float, 15] | max, 24] | min
+        if schedule_target_valid and effective_mode in ['Home', 'Sleep']
+        else first_floor_base_target
+      }}
+    chris_target: >
+      {{
+        [[schedule_target | float, 15] | max, 24] | min
+        if schedule_target_valid and effective_mode in ['Home', 'Sleep']
+        else chris_base_target
+      }}
 
     setback_target: >
       {{ states('input_number.heating_away_setback_target') | float(12) }}
     heating_on_margin: >
       {{ states('input_number.heating_on_margin') | float(0.3) }}
+    boost_target: >
+      {{ states('input_number.heating_boost_target') | float(22) }}
+    normal_heating_allowed: >
+      {{ effective_mode in ['Home', 'Sleep'] }}
 
     ground_floor_needs_heat: >
       {{
         ground_floor_temp_valid
-        and anyone_home
+        and normal_heating_allowed
         and ground_floor_temp | float
           < (ground_floor_target - heating_on_margin)
       }}
@@ -290,7 +330,7 @@
     first_floor_needs_heat: >
       {{
         first_floor_temp_valid
-        and anyone_home
+        and normal_heating_allowed
         and first_floor_temp | float
           < (first_floor_target - heating_on_margin)
       }}
@@ -298,7 +338,7 @@
     chris_needs_heat: >
       {{
         chris_temp_valid
-        and anyone_home
+        and normal_heating_allowed
         and chris_temp | float < (chris_target - heating_on_margin)
       }}
 
@@ -308,8 +348,14 @@
     hvac_mode: >
       {% if frost_protection_active %}
         heat
+      {% elif not effective_mode_valid %}
+        skip
       {% elif not indoor_temperature_available %}
         skip
+      {% elif effective_mode in ['Away', 'Holiday', 'Off'] %}
+        off
+      {% elif effective_mode == 'Boost' %}
+        heat
       {% elif outside_warm %}
         off
       {% elif any_zone_needs_heat %}
@@ -321,8 +367,13 @@
     desired_temp: >
       {% if hvac_mode == 'heat' %}
         {% if frost_protection_active
-          and (not anyone_home or not indoor_temperature_available) %}
+          and (
+            effective_mode in ['Away', 'Holiday', 'Off']
+            or not indoor_temperature_available
+          ) %}
           {{ setback_target }}
+        {% elif effective_mode == 'Boost' %}
+          {{ boost_target }}
         {% else %}
           {{ [ground_floor_target, first_floor_target, chris_target] | max }}
         {% endif %}
@@ -340,11 +391,16 @@
     policy_mode: >
       {% if hvac_mode == 'skip' %}
         sensor_failure
+      {% elif frost_protection_active
+        and (
+          effective_mode in ['Away', 'Holiday', 'Off']
+          or not indoor_temperature_available
+        ) %}
+        frost_protection
+      {% elif effective_mode == 'Boost' and hvac_mode == 'heat' %}
+        boost
       {% elif hvac_mode == 'off' %}
         off
-      {% elif frost_protection_active
-        and (not anyone_home or not indoor_temperature_available) %}
-        frost_protection
       {% else %}
         zone_heating
       {% endif %}
@@ -434,10 +490,14 @@
           Heating Zone Policy triggered.
           mode={{ policy_mode }},
           hvac_mode={{ hvac_mode }},
+          effective_mode={{ effective_mode }},
+          effective_mode_valid={{ effective_mode_valid }},
           anyone_home={{ anyone_home }},
           outside_temp={{ outside_temp }},
           freezing_cutoff={{ freezing_cutoff }},
           heating_on_margin={{ heating_on_margin }},
+          schedule_target={{ schedule_target }},
+          boost_target={{ boost_target }},
           hive_available={{ hive_available }},
           desired_temp={{ desired_temp }},
           active_zones={{ active_zones }},
@@ -454,7 +514,7 @@
             - condition: template
               value_template: "{{ hvac_mode == 'skip' }}"
           sequence:
-            - stop: All indoor temperature sources are unavailable
+            - stop: Heating mode or indoor temperature sources are unavailable
 
     - choose:
         - conditions:
@@ -503,6 +563,7 @@
         message: >
           Heating Zone Policy completed.
           mode={{ policy_mode }},
+          effective_mode={{ effective_mode }},
           hvac_mode={{ hvac_mode }},
           active_zones={{ active_zones }},
           climate_state={{ states('climate.hive_control') }},
@@ -534,8 +595,11 @@
       entity_id:
         - input_number.heating_target_chris_room
         - input_number.heating_chris_room_frost_target
+        - input_number.heating_boost_target
         - sensor.chris_room_temperature
         - binary_sensor.anyone_home
+        - sensor.heating_effective_mode
+        - schedule.heating_weekly_mode
     - platform: homeassistant
       event: start
     - platform: time_pattern
@@ -543,17 +607,43 @@
 
   variables:
     anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
-    chris_target: "{{ states('input_number.heating_target_chris_room') | float(20) }}"
+    effective_mode: "{{ states('sensor.heating_effective_mode') }}"
+    effective_mode_valid: >
+      {{
+        effective_mode in ['Home', 'Sleep', 'Away', 'Holiday', 'Boost', 'Off']
+      }}
+    schedule_target: >
+      {{ state_attr('schedule.heating_weekly_mode', 'target') }}
+    schedule_target_valid: >
+      {{
+        is_state('schedule.heating_weekly_mode', 'on')
+        and is_number(schedule_target)
+      }}
+    chris_base_target: >
+      {{ states('input_number.heating_target_chris_room') | float(20) }}
+    chris_target: >
+      {{
+        [[schedule_target | float, 15] | max, 24] | min
+        if schedule_target_valid and effective_mode in ['Home', 'Sleep']
+        else chris_base_target
+      }}
     frost_target: >
       {{ states('input_number.heating_chris_room_frost_target') | float(8) }}
+    boost_target: >
+      {{ states('input_number.heating_boost_target') | float(22) }}
     trv_target: >
-      {% if anyone_home %}
+      {% if effective_mode == 'Boost' %}
+        {{ boost_target }}
+      {% elif effective_mode in ['Home', 'Sleep'] %}
         {{ chris_target }}
       {% else %}
         {{ frost_target }}
       {% endif %}
 
   action:
+    - condition: template
+      value_template: "{{ effective_mode_valid }}"
+
     - service: climate.set_temperature
       target:
         entity_id: climate.chris_room_trv
@@ -566,5 +656,6 @@
         message: >
           Chris Room TRV updated.
           anyone_home={{ anyone_home }},
+          effective_mode={{ effective_mode }},
           trv_target={{ trv_target }},
           current_temp={{ states('sensor.chris_room_temperature') }}

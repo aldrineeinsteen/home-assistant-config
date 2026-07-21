@@ -43,17 +43,61 @@ heating targets, cutoffs, frost/setback values, and the heating-on margin live i
 `packages/heating.yaml`. Energy tariff sensors are kept separately in
 `packages/energy_tariffs.yaml`.
 
-Every heating helper has an explicit `initial` value, so a clean installation
-starts with the captured Raspberry Pi settings instead of depending on runtime
-state. Home Assistant normally restores an `input_number` without `initial`
-from its previous state; none of the heating helpers use that behavior. Changes
-made from the UI remain effective until the next Home Assistant restart, when
-the version-controlled YAML default is applied again.
+Every heating `input_number` has an explicit `initial` value, so a clean
+installation starts with the captured Raspberry Pi settings instead of
+depending on runtime state. Home Assistant normally restores an `input_number`
+without `initial` from its previous state; none of the heating number helpers
+use that behavior. Changes made from the UI remain effective until the next
+Home Assistant restart, when the version-controlled YAML default is applied
+again.
 
 The captured defaults are 20°C for the ground floor, first floor, and Chris
 room, 13°C for the outside warm-weather cutoff, and 6°C for the freezing
 cutoff. The previously hardcoded defaults are 12°C for the away setback, 8°C
 for Chris room frost protection, and 0.3°C for the heating-on margin.
+
+## Heating modes
+
+`sensor.heating_effective_mode` exposes the active mode, and
+`sensor.heating_effective_mode_reason` explains why it was selected. Mode
+priority is:
+
+1. Manual `Off`.
+2. An active temporary `Boost`.
+3. Manual `Holiday`.
+4. Automatic `Away` when stable household presence is off.
+5. Scheduled `Sleep` while someone is home.
+6. Automatic `Home` at all other occupied times.
+
+The `input_select.heating_manual_mode` options are `Auto`, `Holiday`, and `Off`.
+It intentionally has no `initial` value, so Home Assistant restores Holiday or
+Off after a restart until it is explicitly returned to Auto. On a clean
+installation, Auto is the first option. Selecting Off cancels an active Boost,
+and the Boost start script refuses to start while Off is selected.
+
+`schedule.heating_weekly_mode` selects Sleep from midnight to 07:00 every day.
+Sleep uses the existing per-zone targets, so the default schedule changes the
+displayed mode but preserves the previous comfort behavior. Additional evening
+or daytime blocks can be added when the household schedule is known. A block
+may optionally add `target: 18`, or another value; scheduled targets are
+constrained to the existing 15–24°C safety range. When the schedule is inactive,
+an occupied home uses Home mode.
+
+Presence is stabilized before it affects heating: arrival must remain true for
+2 minutes and departure for 10 minutes. Both delays are adjustable helpers.
+
+Boost starts through `script.heating_start_boost`, using a 22°C target for 60
+minutes by default. Both values are adjustable. `timer.heating_boost` restores
+across restarts, and when it becomes idle the effective mode automatically
+returns to the applicable Holiday, Away, Sleep, or Home state. Boost can be
+ended early with `script.heating_cancel_boost`; manual modes can be cleared with
+`script.heating_clear_manual_mode`.
+
+Away, Holiday, and Off suppress normal demand but do not suppress verified
+frost protection. During frost protection they use the configured away setback,
+while Chris room's TRV uses its configured frost target. If all indoor sensors
+are invalid, Boost is suppressed unless frost protection is required, in which
+case the lower away setback is used.
 
 ## Heating failure behavior
 
