@@ -67,12 +67,14 @@ Assistant's read-only dashboard editor and converted to normal YAML files:
 - `dashboards/energy.yaml` — Energy, shown in the sidebar.
 - `dashboards/map.yaml` — Map, hidden from the sidebar.
 
-`configuration.yaml` declares each file as a YAML dashboard under the candidate
-paths `repo-overview`, `repo-devices`, `repo-energy`, and `repo-map`. They are
-hidden and administrator-only during migration. The existing storage-mode
-dashboards remain untouched, which makes side-by-side verification and rollback
-possible. The Map dashboard's `strategy: map` definition remains auto-generated
-from the entities available on each installation.
+`configuration.yaml` declares each file as a YAML dashboard under the paths
+`repo-overview`, `repo-devices`, `repo-energy`, and `repo-map`. After migration,
+`repo-overview` is titled Home and shown in the sidebar. The other repository
+dashboards remain hidden until deliberately promoted. The original storage-mode
+dashboards remain available for rollback; the user's frontend preference makes
+Home the default and hides the old Overview shortcut. The Map dashboard's
+`strategy: map` definition remains auto-generated from the entities available
+on each installation.
 
 Open the first view at `/repo-overview/0`, `/repo-devices/0`,
 `/repo-energy/0`, or `/repo-map/0`. On this Home Assistant version, the bare
@@ -201,11 +203,19 @@ dashboard export.
 
 The repository control helper defaults to off on a clean installation. This
 allows the complete configuration to be loaded and inspected without sending
-commands to Hive or the Chris-room TRV. Turn it on only after the diagnostics
-and live entity mappings have been verified. Lockout reasons distinguish that
+commands to Hive or any TRV. Turn it on only after the diagnostics and live
+entity mappings have been verified. Lockout reasons distinguish that
 shadow state (`control_disabled`), minimum-on/off timing, manual and presence
 modes, warm-weather cutoff, unavailable Hive control, invalid modes, all indoor
 sensors failing, and the ordinary absence of zone demand.
+
+The zone TRV manager applies the same policy to the Utility Room, both Master
+Bedroom TRVs, and Chris's room. A TRV is put into heat mode only while its zone
+has valid demand; it is explicitly turned off when satisfied, during the
+warm-weather cutoff, or when its normal mode is suppressed. In Away, Holiday,
+and Manual Off, a valid freezing outside temperature can still open an
+individual TRV at its configured frost target. Mode and target commands are
+idempotent and receive at most one acknowledgement retry.
 
 ## Heating failure behavior
 

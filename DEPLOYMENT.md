@@ -105,8 +105,8 @@ Verify in this order:
 6. `sensor.heating_boiler_lockout_reason` reports `control_disabled` and the
    repository control helper is off.
 7. The baseline lighting, seed-rack, Hive restart, and Ring automations exist
-   once. The old Heating Zone Policy Manager and Chris Room TRV Manager are not
-   duplicated.
+   once. Heating Boiler Demand Policy and Heating Zone TRV Manager are enabled
+   and are not duplicated.
 8. Logs contain no missing-entity errors for the mapped Chris bedroom, master
    bedroom, utility room, outside temperature, or Hive entities.
 
@@ -127,7 +127,10 @@ true:
 
 Enabling the helper triggers both heating policies immediately. Watch the Hive
 HVAC mode, requested target, active zones, and lockout reason through at least
-one on/off decision. Commands are idempotent and use a single bounded retry.
+one on/off decision. Verify that the Utility Room, both Master Bedroom TRVs, and
+Chris's TRV are off when their zones do not demand heat and enter heat mode only
+for valid normal or frost demand. Commands are idempotent and use a single
+bounded retry.
 
 If a device or mapping remains unavailable, leave the helper off. The rest of
 the repository configuration can remain active safely while the integration is

@@ -740,6 +740,195 @@ template:
             {{ states('input_number.heating_boiler_call_temperature') }}
 
 script:
+  heating_apply_trv_policy:
+    alias: Heating - Apply TRV Policy
+    description: Apply one zone's demand, target, and frost policy to a TRV.
+    mode: parallel
+    max: 4
+    fields:
+      trv_entity:
+        name: TRV entity
+        required: true
+        selector:
+          entity:
+            domain: climate
+      demand_entity:
+        name: Zone demand entity
+        required: true
+        selector:
+          entity:
+            domain: binary_sensor
+      target_entity:
+        name: Effective target entity
+        required: true
+        selector:
+          entity:
+            domain: sensor
+      current_temperature_entity:
+        name: Current temperature entity
+        required: true
+        selector:
+          entity:
+            domain: sensor
+      frost_target_entity:
+        name: Frost target entity
+        required: true
+        selector:
+          entity:
+            domain: input_number
+    variables:
+      effective_mode: "{{ states('sensor.heating_effective_mode') }}"
+      current_temperature_state: >
+        {{ states(current_temperature_entity) }}
+      normal_target_state: "{{ states(target_entity) }}"
+      frost_target_state: "{{ states(frost_target_entity) }}"
+      outside_temperature_state: "{{ states('sensor.outside_temperature') }}"
+      freezing_cutoff_state: >
+        {{ states('input_number.heating_freezing_cutoff') }}
+      frost_weather: >
+        {{
+          is_number(outside_temperature_state)
+          and is_number(freezing_cutoff_state)
+          and outside_temperature_state | float
+            <= freezing_cutoff_state | float
+        }}
+      normal_heat: >
+        {{
+          effective_mode in ['Home', 'Sleep', 'Boost']
+          and (
+            effective_mode == 'Boost'
+            or not is_state(
+              'binary_sensor.outside_warm_enough_for_heating_off', 'on'
+            )
+          )
+          and is_state(demand_entity, 'on')
+        }}
+      frost_heat: >
+        {{
+          effective_mode in ['Away', 'Holiday', 'Off']
+          and frost_weather | bool(false)
+          and is_number(current_temperature_state)
+          and is_number(frost_target_state)
+          and current_temperature_state | float < frost_target_state | float
+        }}
+      desired_heat: >
+        {{ normal_heat | bool(false) or frost_heat | bool(false) }}
+      desired_target: >
+        {{
+          frost_target_state | float(8)
+          if frost_heat | bool(false)
+          else normal_target_state | float(20)
+        }}
+      current_mode: "{{ states(trv_entity) }}"
+      current_target: "{{ state_attr(trv_entity, 'temperature') }}"
+      acknowledgement_tolerance: >
+        {{
+          states('input_number.heating_hive_acknowledgement_tolerance')
+          | float(0.2)
+        }}
+    sequence:
+      - condition: state
+        entity_id: input_boolean.heating_policy_control_enabled
+        state: "on"
+      - condition: template
+        value_template: >
+          {{ states(trv_entity) not in ['unknown', 'unavailable'] }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ desired_heat | bool(false) }}"
+            sequence:
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: "{{ current_mode != 'heat' }}"
+                    sequence:
+                      - action: climate.set_hvac_mode
+                        target:
+                          entity_id: "{{ trv_entity }}"
+                        data:
+                          hvac_mode: heat
+                        continue_on_error: true
+                      - wait_template: "{{ is_state(trv_entity, 'heat') }}"
+                        timeout: "00:00:10"
+                        continue_on_timeout: true
+                      - choose:
+                          - conditions:
+                              - condition: template
+                                value_template: "{{ not wait.completed }}"
+                            sequence:
+                              - action: climate.set_hvac_mode
+                                target:
+                                  entity_id: "{{ trv_entity }}"
+                                data:
+                                  hvac_mode: heat
+                                continue_on_error: true
+              - choose:
+                  - conditions:
+                      - condition: template
+                        value_template: >
+                          {{
+                            not is_number(current_target)
+                            or (
+                              current_target | float - desired_target | float
+                            ) | abs > acknowledgement_tolerance
+                          }}
+                    sequence:
+                      - action: climate.set_temperature
+                        target:
+                          entity_id: "{{ trv_entity }}"
+                        data:
+                          temperature: "{{ desired_target }}"
+                        continue_on_error: true
+                      - wait_template: >
+                          {% set live_target =
+                            state_attr(trv_entity, 'temperature') %}
+                          {{
+                            is_number(live_target)
+                            and (
+                              live_target | float - desired_target | float
+                            ) | abs <= acknowledgement_tolerance
+                          }}
+                        timeout: "00:00:10"
+                        continue_on_timeout: true
+                      - choose:
+                          - conditions:
+                              - condition: template
+                                value_template: "{{ not wait.completed }}"
+                            sequence:
+                              - action: climate.set_temperature
+                                target:
+                                  entity_id: "{{ trv_entity }}"
+                                data:
+                                  temperature: "{{ desired_target }}"
+                                continue_on_error: true
+        default:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ current_mode != 'off' }}"
+                sequence:
+                  - action: climate.set_hvac_mode
+                    target:
+                      entity_id: "{{ trv_entity }}"
+                    data:
+                      hvac_mode: "off"
+                    continue_on_error: true
+                  - wait_template: "{{ is_state(trv_entity, 'off') }}"
+                    timeout: "00:00:10"
+                    continue_on_timeout: true
+                  - choose:
+                      - conditions:
+                          - condition: template
+                            value_template: "{{ not wait.completed }}"
+                        sequence:
+                          - action: climate.set_hvac_mode
+                            target:
+                              entity_id: "{{ trv_entity }}"
+                            data:
+                              hvac_mode: "off"
+                            continue_on_error: true
+
   heating_start_boost:
     alias: Heating - Start Boost
     icon: mdi:fire

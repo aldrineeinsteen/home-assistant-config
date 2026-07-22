@@ -20,10 +20,10 @@ lovelace:
     repo-overview:
       mode: yaml
       filename: repos/home-assistant-config/dashboards/overview.yaml
-      title: Repository Overview
-      icon: mdi:test-tube
-      show_in_sidebar: false
-      require_admin: true
+      title: Home
+      icon: mdi:home
+      show_in_sidebar: true
+      require_admin: false
     repo-devices:
       mode: yaml
       filename: repos/home-assistant-config/dashboards/devices.yaml

@@ -65,12 +65,15 @@ views:
         cards:
           - type: heading
             heading: Ground Floor
-          - type: tile
-            entity: input_number.heating_target_ground_floor
-            name: Ground Floor Target
+          - type: thermostat
+            entity: climate.radiator_valve_1_5
+            name: Ground Floor TRV
           - type: tile
             entity: sensor.ground_floor_avg_temperature
             name: Ground Floor Current
+          - type: tile
+            entity: input_number.heating_target_ground_floor
+            name: Ground Floor Target
       - type: grid
         cards:
           - type: heading
@@ -97,19 +100,29 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Bedroom Radiators
-          - type: tile
+            heading: Master Bedroom - TRV 1
+          - type: thermostat
             entity: climate.radiator_valve_1_2
             name: Master Bedroom TRV 1
           - type: tile
             entity: sensor.radiator_valve_1_current_temperature_2
             name: Master Bedroom Temp 1
           - type: tile
+            entity: input_number.heating_target_first_floor
+            name: Master Bedroom Target
+      - type: grid
+        cards:
+          - type: heading
+            heading: Master Bedroom - TRV 2
+          - type: thermostat
             entity: climate.radiator_valve_1_master_bedroom_3
             name: Master Bedroom TRV 2
           - type: tile
             entity: sensor.radiator_valve_1_current_temperature
             name: Master Bedroom Temp 2
+          - type: tile
+            entity: input_number.heating_target_first_floor
+            name: Master Bedroom Target
       - type: grid
         cards:
           - type: heading
@@ -210,10 +223,10 @@ views:
             title: Heating Control
             show_header_toggle: false
             entities:
-              - entity: automation.heating_boiler_demand_policy
+              - entity: automation.heating_zone_policy_manager
                 name: Boiler Demand Policy
               - entity: automation.chris_room_trv_manager
-                name: Chris Room TRV Manager
+                name: Zone TRV Manager
               - entity: binary_sensor.heating_boiler_demand
                 name: Boiler Demand
               - entity: sensor.heating_active_zones
