@@ -94,7 +94,9 @@ repository heating automations load but cannot send Hive or TRV commands.
 Verify in this order:
 
 1. Home Assistant finishes starting and another `ha core check` succeeds.
-2. The four `repo-*` dashboards load.
+2. The four candidate dashboards load at `/repo-overview/0`,
+   `/repo-devices/0`, `/repo-energy/0`, and `/repo-map/0`. The trailing `/0`
+   selects the first view and is required on the audited Home Assistant version.
 3. `binary_sensor.anyone_home` reflects Aldrine, Evangeline, Chris, and Keona.
 4. Ground-floor, first-floor, and Chris-room temperatures are numeric or
    unavailable—never a fabricated `0°C` for a failed source.

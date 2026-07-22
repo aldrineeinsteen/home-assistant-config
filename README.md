@@ -74,6 +74,11 @@ dashboards remain untouched, which makes side-by-side verification and rollback
 possible. The Map dashboard's `strategy: map` definition remains auto-generated
 from the entities available on each installation.
 
+Open the first view at `/repo-overview/0`, `/repo-devices/0`,
+`/repo-energy/0`, or `/repo-map/0`. On this Home Assistant version, the bare
+dashboard path (for example `/repo-overview`) does not redirect to its first
+view and returns 404 even though the dashboard is registered correctly.
+
 Only portable dashboard definitions and their non-secret metadata are tracked.
 The source `.storage` files, browser state, credentials, and runtime state were
 not copied. Lovelace resources remain in storage mode so HACS can manage any
