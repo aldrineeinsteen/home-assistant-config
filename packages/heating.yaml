@@ -152,6 +152,11 @@ input_select:
       - "Off"
     icon: mdi:thermostat-cog
 
+input_boolean:
+  heating_policy_control_enabled:
+    name: Heating Repository Control Enabled
+    icon: mdi:shield-check-outline
+
 schedule:
   heating_weekly_mode:
     name: Heating Weekly Mode
@@ -443,7 +448,7 @@ template:
         icon: mdi:radiator
         availability: >
           {{
-            is_number(states('sensor.chris_room_temperature'))
+            is_number(states('sensor.chris_bedroom_current_temperature'))
             and is_number(
               states('sensor.heating_chris_room_effective_target')
             )
@@ -451,7 +456,8 @@ template:
           }}
         state: >
           {% set mode = states('sensor.heating_effective_mode') %}
-          {% set current = states('sensor.chris_room_temperature') | float %}
+          {% set current =
+            states('sensor.chris_bedroom_current_temperature') | float %}
           {% set target =
             states('sensor.heating_chris_room_effective_target') | float %}
           {% set hysteresis =
@@ -464,7 +470,8 @@ template:
             {{ current < target - hysteresis }}
           {% endif %}
         attributes:
-          current_temperature: "{{ states('sensor.chris_room_temperature') }}"
+          current_temperature: >
+            {{ states('sensor.chris_bedroom_current_temperature') }}
           target_temperature: >
             {{ states('sensor.heating_chris_room_effective_target') }}
           mode: "{{ states('sensor.heating_effective_mode') }}"
@@ -545,7 +552,9 @@ template:
               states('sensor.first_floor_avg_temperature')) %}
               {% set zones = zones + ['first_floor'] %}
             {% endif %}
-            {% if not is_number(states('sensor.chris_room_temperature')) %}
+            {% if not is_number(
+              states('sensor.chris_bedroom_current_temperature')
+            ) %}
               {% set zones = zones + ['chris_room'] %}
             {% endif %}
             {{ zones | join(', ') if zones | count > 0 else 'none' }}
@@ -560,7 +569,9 @@ template:
           {% set indoor_available =
             is_number(states('sensor.ground_floor_avg_temperature'))
             or is_number(states('sensor.first_floor_avg_temperature'))
-            or is_number(states('sensor.chris_room_temperature')) %}
+            or is_number(
+              states('sensor.chris_bedroom_current_temperature')
+            ) %}
           {% set outside = states('sensor.outside_temperature') %}
           {% set freezing =
             states('input_number.heating_freezing_cutoff') %}
@@ -580,7 +591,11 @@ template:
           {% set minimum_off =
             states('input_number.heating_minimum_boiler_off_minutes')
             | float(5) * 60 %}
-          {% if not is_state('binary_sensor.hive_control_available', 'on') %}
+          {% if not is_state(
+            'input_boolean.heating_policy_control_enabled', 'on'
+          ) %}
+            control_disabled
+          {% elif not is_state('binary_sensor.hive_control_available', 'on') %}
             hive_unavailable
           {% elif not valid_mode %}
             invalid_mode

@@ -211,6 +211,7 @@
         - binary_sensor.heating_boiler_demand
         - sensor.heating_boiler_lockout_reason
         - sensor.heating_requested_target
+        - input_boolean.heating_policy_control_enabled
     - platform: state
       entity_id: climate.hive_control
       to: "heat"
@@ -271,7 +272,7 @@
 
     ground_floor_temp: "{{ states('sensor.ground_floor_avg_temperature') }}"
     first_floor_temp: "{{ states('sensor.first_floor_avg_temperature') }}"
-    chris_temp: "{{ states('sensor.chris_room_temperature') }}"
+    chris_temp: "{{ states('sensor.chris_bedroom_current_temperature') }}"
 
     ground_floor_temp_valid: "{{ is_number(ground_floor_temp) }}"
     first_floor_temp_valid: "{{ is_number(first_floor_temp) }}"
@@ -284,7 +285,7 @@
       }}
     hvac_mode: >
       {% if boiler_lockout_reason in
-        ['invalid_mode', 'all_indoor_sensors_invalid'] %}
+        ['control_disabled', 'invalid_mode', 'all_indoor_sensors_invalid'] %}
         skip
       {% elif boiler_lockout_reason == 'hive_unavailable' %}
         unavailable
@@ -458,6 +459,13 @@
                   desired_temp={{ desired_temp }},
                   active_zones={{ active_zones }}
             - stop: Hive unavailable
+
+    # Repository control is deliberately off on first deployment. Diagnostics
+    # and failure notifications above remain active while physical commands
+    # below are blocked.
+    - condition: state
+      entity_id: input_boolean.heating_policy_control_enabled
+      state: "on"
 
     - choose:
         - conditions:
@@ -642,10 +650,11 @@
         - input_number.heating_target_chris_room
         - input_number.heating_chris_room_frost_target
         - input_number.heating_boost_target
-        - sensor.chris_room_temperature
+        - sensor.chris_bedroom_current_temperature
         - binary_sensor.anyone_home
         - sensor.heating_effective_mode
         - schedule.heating_weekly_mode
+        - input_boolean.heating_policy_control_enabled
     - platform: homeassistant
       event: start
     - platform: time_pattern
@@ -687,12 +696,16 @@
       {% endif %}
 
   action:
+    - condition: state
+      entity_id: input_boolean.heating_policy_control_enabled
+      state: "on"
+
     - condition: template
       value_template: "{{ effective_mode_valid }}"
 
     - service: climate.set_temperature
       target:
-        entity_id: climate.chris_room_trv
+        entity_id: climate.chris_bedroom_1
       data:
         temperature: "{{ trv_target }}"
 
@@ -704,4 +717,4 @@
           anyone_home={{ anyone_home }},
           effective_mode={{ effective_mode }},
           trv_target={{ trv_target }},
-          current_temp={{ states('sensor.chris_room_temperature') }}
+          current_temp={{ states('sensor.chris_bedroom_current_temperature') }}

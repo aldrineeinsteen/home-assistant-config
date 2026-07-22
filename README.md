@@ -10,6 +10,7 @@ The initial export was taken from Home Assistant 2026.7.2 on 21 July 2026.
 - `scripts.yaml`
 - `scenes.yaml`
 - `packages/heating.yaml` for reproducible heating settings
+- `packages/household.yaml` for portable household, weather, and room templates
 - `packages/energy_tariffs.yaml` for tariff template sensors
 - `dashboards/*.yaml` for the exported Lovelace dashboards
 - `hacs/installed.yaml` for the sanitized HACS extension inventory
@@ -66,12 +67,12 @@ Assistant's read-only dashboard editor and converted to normal YAML files:
 - `dashboards/energy.yaml` — Energy, shown in the sidebar.
 - `dashboards/map.yaml` — Map, hidden from the sidebar.
 
-`configuration.yaml` declares each file as a YAML dashboard. The Overview,
-Devices, and Energy paths remain `lovelace`, `dashboard-devices`, and
-`dashboard-energy`. Home Assistant requires additional YAML dashboard keys to
-contain a hyphen, so the exported Map is registered as `dashboard-map` rather
-than the live storage-mode `map` path. Its `strategy: map` definition remains
-auto-generated from the entities available on each installation.
+`configuration.yaml` declares each file as a YAML dashboard under the candidate
+paths `repo-overview`, `repo-devices`, `repo-energy`, and `repo-map`. They are
+hidden and administrator-only during migration. The existing storage-mode
+dashboards remain untouched, which makes side-by-side verification and rollback
+possible. The Map dashboard's `strategy: map` definition remains auto-generated
+from the entities available on each installation.
 
 Only portable dashboard definitions and their non-secret metadata are tracked.
 The source `.storage` files, browser state, credentials, and runtime state were
@@ -83,7 +84,8 @@ future frontend resources independently of these dashboard files.
 Home Assistant packages are enabled from `configuration.yaml`. All adjustable
 heating targets, cutoffs, frost/setback values, and demand hysteresis live in
 `packages/heating.yaml`. Energy tariff sensors are kept separately in
-`packages/energy_tariffs.yaml`.
+`packages/energy_tariffs.yaml`; household, room-temperature, weather, and
+availability templates live in `packages/household.yaml`.
 
 Every heating `input_number` has an explicit `initial` value, so a clean
 installation starts with the captured Raspberry Pi settings instead of
@@ -186,13 +188,18 @@ Dashboard and troubleshooting entities are:
 - `sensor.heating_active_zones`
 - `sensor.heating_requested_target`
 - `sensor.heating_boiler_lockout_reason`
+- `input_boolean.heating_policy_control_enabled`
 
 The Overview dashboard uses these current policy entities and no longer points
 to the superseded turn-on/turn-off automation IDs from the original live
 dashboard export.
 
-Lockout reasons distinguish minimum-on/off timing, manual and presence modes,
-warm-weather cutoff, unavailable Hive control, invalid modes, all indoor
+The repository control helper defaults to off on a clean installation. This
+allows the complete configuration to be loaded and inspected without sending
+commands to Hive or the Chris-room TRV. Turn it on only after the diagnostics
+and live entity mappings have been verified. Lockout reasons distinguish that
+shadow state (`control_disabled`), minimum-on/off timing, manual and presence
+modes, warm-weather cutoff, unavailable Hive control, invalid modes, all indoor
 sensors failing, and the ordinary absence of zone demand.
 
 ## Heating failure behavior
@@ -219,9 +226,10 @@ Household presence includes Aldrine, Evangeline, Chris, and Keona.
 
 1. Edit configuration on a branch.
 2. Open a pull request; GitHub Actions checks all tracked YAML.
-3. Follow `DEPLOYMENT.md` to back up the instance, merge the repository as an
-   overlay, check the configuration, verify behavior, and retain a tested
-   rollback path. Never replace `/config` wholesale.
+3. Follow `DEPLOYMENT.md` to back up the instance, update the checkout, install
+   the small repository bootstrap, check the configuration, restart in shadow
+   mode, and enable heating only after verification. Never replace `/config`
+   wholesale.
 
 The repository intentionally contains entity IDs and household automation
 names because they are required by the configuration. Keep the repository

@@ -1,169 +1,51 @@
-# Loads default set of integrations. Do not remove.
+# Production bootstrap for a checkout at:
+# /config/repos/home-assistant-config
+
+# Loads the standard Home Assistant integrations. Do not remove.
 default_config:
 
 homeassistant:
-  packages: !include_dir_named packages
+  packages: !include_dir_named repos/home-assistant-config/packages
 
 http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 192.168.100.99
 
-# Load frontend themes from the themes folder
 frontend:
-  themes: !include_dir_merge_named themes
+  themes: !include_dir_merge_named repos/home-assistant-config/themes
 
 lovelace:
   dashboards:
-    lovelace:
+    repo-overview:
       mode: yaml
-      filename: dashboards/overview.yaml
-      title: Overview
-      icon: mdi:view-dashboard
-      show_in_sidebar: true
-      require_admin: false
-    dashboard-devices:
-      mode: yaml
-      filename: dashboards/devices.yaml
-      title: Devices
-      icon: mdi:devices
-      show_in_sidebar: true
-      require_admin: false
-    dashboard-energy:
-      mode: yaml
-      filename: dashboards/energy.yaml
-      title: Energy
-      icon: mdi:home-lightning-bolt
-      show_in_sidebar: true
-      require_admin: false
-    dashboard-map:
-      mode: yaml
-      filename: dashboards/map.yaml
-      title: Map
-      icon: mdi:map
+      filename: repos/home-assistant-config/dashboards/overview.yaml
+      title: Repository Overview
+      icon: mdi:test-tube
       show_in_sidebar: false
-      require_admin: false
+      require_admin: true
+    repo-devices:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/devices.yaml
+      title: Repository Devices
+      icon: mdi:test-tube
+      show_in_sidebar: false
+      require_admin: true
+    repo-energy:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/energy.yaml
+      title: Repository Energy
+      icon: mdi:test-tube
+      show_in_sidebar: false
+      require_admin: true
+    repo-map:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/map.yaml
+      title: Repository Map
+      icon: mdi:test-tube
+      show_in_sidebar: false
+      require_admin: true
 
-automation: !include automations.yaml
-script: !include scripts.yaml
-scene: !include scenes.yaml
-
-template:
-  - binary_sensor:
-      - name: "Anyone Home"
-        unique_id: anyone_home
-        state: >
-          {{
-            is_state('person.aldrine_einsteen', 'home')
-            or is_state('person.evangeline_aldrine', 'home')
-            or is_state('person.chris_aldrine', 'home')
-            or is_state('person.keona_aldrine', 'home')
-          }}
-
-      - name: "Outside Warm Enough For Heating Off"
-        unique_id: outside_warm_enough_for_heating_off
-        availability: >
-          {% set outside_temp = state_attr('weather.forecast_home', 'temperature') %}
-          {{
-            is_number(outside_temp)
-            and is_number(states('input_number.heating_outside_cutoff'))
-          }}
-        state: >
-          {% set outside_temp = state_attr('weather.forecast_home', 'temperature') %}
-          {{
-            is_number(outside_temp)
-            and is_number(states('input_number.heating_outside_cutoff'))
-            and outside_temp | float
-              >= states('input_number.heating_outside_cutoff') | float
-          }}
-
-  - sensor:
-      - name: "First Floor Avg Temperature"
-        unique_id: first_floor_avg_temperature
-        unit_of_measurement: "°C"
-        availability: >
-          {% set temps = [
-            state_attr('climate.radiator_valve_1', 'current_temperature'),
-            state_attr('climate.radiator_valve_1_2', 'current_temperature')
-          ] %}
-          {{ temps | select('number') | list | count > 0 }}
-        state: >
-          {% set temps = [
-            state_attr('climate.radiator_valve_1', 'current_temperature'),
-            state_attr('climate.radiator_valve_1_2', 'current_temperature')
-          ] %}
-          {% set valid = temps | select('number') | list %}
-          {% if valid | count > 0 %}
-            {{ (valid | sum / valid | count) | round(1) }}
-          {% else %}
-            {{ none }}
-          {% endif %}
-
-      - name: "Hive Restart Last Run Minutes"
-        unique_id: hive_restart_last_run_minutes
-        unit_of_measurement: "min"
-        state: >
-          {% set last = state_attr('automation.restart', 'last_triggered') %}
-          {% if last %}
-            {{ ((as_timestamp(now()) - as_timestamp(last)) / 60) | round(0) }}
-          {% else %}
-            unknown
-          {% endif %}
-  - binary_sensor:
-      - name: "Seed Rack Lights Should Be On"
-        unique_id: seed_rack_lights_should_be_on
-        state: >
-          {{ now().strftime('%H:%M:%S') >= '07:00:00' and now().strftime('%H:%M:%S') < '20:00:00' }}
-
-      - name: "Seed Rack Lights In Sync"
-        unique_id: seed_rack_lights_in_sync
-        state: >
-          {% set should_be_on = now().strftime('%H:%M:%S') >= '07:00:00' and now().strftime('%H:%M:%S') < '20:00:00' %}
-          {% set top_on = is_state('switch.top_lights_seed_rack_socket_1', 'on') %}
-          {% set bottom_on = is_state('switch.bottom_lights_seed_rack_socket_1', 'on') %}
-          {% if should_be_on %}
-            {{ top_on and bottom_on }}
-          {% else %}
-            {{ not top_on and not bottom_on }}
-          {% endif %}
-
-      - name: "Hive Control Available"
-        unique_id: hive_control_available
-        state: >
-          {{ states('climate.hive_control') not in ['unavailable', 'unknown'] }}
-
-  - sensor:
-      - name: "Outside Temperature"
-        unique_id: outside_temperature
-        unit_of_measurement: "°C"
-        availability: >
-          {{ is_number(state_attr('weather.forecast_home', 'temperature')) }}
-        state: >
-          {% set outside_temp = state_attr('weather.forecast_home', 'temperature') %}
-          {{ outside_temp | float if is_number(outside_temp) else none }}
-
-  - sensor:
-      - name: Ground Floor Avg Temperature
-        unique_id: ground_floor_avg_temperature
-        unit_of_measurement: "°C"
-        device_class: temperature
-        state_class: measurement
-        availability: >
-          {{
-            is_number(
-              states('sensor.radiator_valve_1_current_temperature_3')
-            )
-          }}
-        state: >
-          {% set temperature =
-            states('sensor.radiator_valve_1_current_temperature_3') %}
-          {{ temperature | float | round(1) if is_number(temperature) else none }}
-
-group:
-  family:
-    name: Family
-    entities:
-      - person.aldrine_einsteen
-      - person.evangeline_aldrine
-      - person.chris_aldrine
-      - person.keona_aldrine
+automation: !include repos/home-assistant-config/automations.yaml
+script: !include repos/home-assistant-config/scripts.yaml
+scene: !include repos/home-assistant-config/scenes.yaml

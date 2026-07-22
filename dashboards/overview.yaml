@@ -86,10 +86,10 @@ views:
           - type: heading
             heading: Kids Room - Chris
           - type: thermostat
-            entity: climate.chris_room_trv
+            entity: climate.chris_bedroom_1
             name: Chris Room TRV
           - type: tile
-            entity: sensor.chris_room_temperature
+            entity: sensor.chris_bedroom_current_temperature
             name: Chris Room Current
           - type: tile
             entity: input_number.heating_target_chris_room
@@ -99,16 +99,16 @@ views:
           - type: heading
             heading: Bedroom Radiators
           - type: tile
-            entity: climate.radiator_valve_1
+            entity: climate.radiator_valve_1_2
             name: Master Bedroom TRV 1
           - type: tile
-            entity: sensor.radiator_valve_1_current_temperature
+            entity: sensor.radiator_valve_1_current_temperature_2
             name: Master Bedroom Temp 1
           - type: tile
-            entity: climate.radiator_valve_1_2
+            entity: climate.radiator_valve_1_master_bedroom_3
             name: Master Bedroom TRV 2
           - type: tile
-            entity: sensor.radiator_valve_1_current_temperature_2
+            entity: sensor.master_bedroom_current_temperature
             name: Master Bedroom Temp 2
       - type: grid
         cards:
@@ -124,6 +124,8 @@ views:
                 name: Mode Reason
               - entity: input_select.heating_manual_mode
                 name: Manual Mode
+              - entity: input_boolean.heating_policy_control_enabled
+                name: Repository Control Enabled
               - entity: schedule.heating_weekly_mode
                 name: Weekly Schedule
               - entity: timer.heating_boost

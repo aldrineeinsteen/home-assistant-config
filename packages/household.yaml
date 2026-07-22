@@ -1,0 +1,150 @@
+template:
+  - binary_sensor:
+      - name: "Anyone Home"
+        unique_id: anyone_home
+        state: >
+          {{
+            states('person.aldrine_einsteen') | lower == 'home'
+            or states('person.evangeline_aldrine') | lower == 'home'
+            or states('person.chris_aldrine') | lower == 'home'
+            or states('person.keona_aldrine') | lower == 'home'
+          }}
+
+      - name: "Outside Warm Enough For Heating Off"
+        unique_id: outside_warm_enough_for_heating_off
+        availability: >
+          {% set outside_temp = state_attr('weather.forecast_home', 'temperature') %}
+          {{
+            is_number(outside_temp)
+            and is_number(states('input_number.heating_outside_cutoff'))
+          }}
+        state: >
+          {% set outside_temp = state_attr('weather.forecast_home', 'temperature') %}
+          {{
+            is_number(outside_temp)
+            and is_number(states('input_number.heating_outside_cutoff'))
+            and outside_temp | float
+              >= states('input_number.heating_outside_cutoff') | float
+          }}
+
+  - sensor:
+      - name: "First Floor Avg Temperature"
+        unique_id: first_floor_avg_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {% set temps = [
+            state_attr(
+              'climate.radiator_valve_1_2',
+              'current_temperature'
+            ),
+            state_attr(
+              'climate.radiator_valve_1_master_bedroom_3',
+              'current_temperature'
+            )
+          ] %}
+          {{ temps | select('number') | list | count > 0 }}
+        state: >
+          {% set temps = [
+            state_attr(
+              'climate.radiator_valve_1_2',
+              'current_temperature'
+            ),
+            state_attr(
+              'climate.radiator_valve_1_master_bedroom_3',
+              'current_temperature'
+            )
+          ] %}
+          {% set valid = temps | select('number') | list %}
+          {% if valid | count > 0 %}
+            {{ (valid | sum / valid | count) | round(1) }}
+          {% else %}
+            {{ none }}
+          {% endif %}
+
+      - name: "Hive Restart Last Run Minutes"
+        unique_id: hive_restart_last_run_minutes
+        unit_of_measurement: "min"
+        state: >
+          {% set last = state_attr('automation.restart', 'last_triggered') %}
+          {% if last %}
+            {{ ((as_timestamp(now()) - as_timestamp(last)) / 60) | round(0) }}
+          {% else %}
+            unknown
+          {% endif %}
+
+  - binary_sensor:
+      - name: "Seed Rack Lights Should Be On"
+        unique_id: seed_rack_lights_should_be_on
+        state: >
+          {{
+            now().strftime('%H:%M:%S') >= '07:00:00'
+            and now().strftime('%H:%M:%S') < '20:00:00'
+          }}
+
+      - name: "Seed Rack Lights In Sync"
+        unique_id: seed_rack_lights_in_sync
+        state: >
+          {% set should_be_on =
+            now().strftime('%H:%M:%S') >= '07:00:00'
+            and now().strftime('%H:%M:%S') < '20:00:00' %}
+          {% set top_on =
+            is_state('switch.top_lights_seed_rack_socket_1', 'on') %}
+          {% set bottom_on =
+            is_state('switch.bottom_lights_seed_rack_socket_1', 'on') %}
+          {{
+            top_on and bottom_on
+            if should_be_on
+            else not top_on and not bottom_on
+          }}
+
+      - name: "Hive Control Available"
+        unique_id: hive_control_available
+        state: >
+          {{
+            states('climate.hive_control')
+            not in ['unavailable', 'unknown']
+          }}
+
+  - sensor:
+      - name: "Outside Temperature"
+        unique_id: outside_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ is_number(state_attr('weather.forecast_home', 'temperature')) }}
+        state: >
+          {% set outside_temp =
+            state_attr('weather.forecast_home', 'temperature') %}
+          {{ outside_temp | float if is_number(outside_temp) else none }}
+
+      - name: Ground Floor Avg Temperature
+        unique_id: ground_floor_avg_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{
+            is_number(
+              states('sensor.radiator_valve_1_current_temperature_5')
+            )
+          }}
+        state: >
+          {% set temperature =
+            states('sensor.radiator_valve_1_current_temperature_5') %}
+          {{
+            temperature | float | round(1)
+            if is_number(temperature)
+            else none
+          }}
+
+group:
+  family:
+    name: Family
+    entities:
+      - person.aldrine_einsteen
+      - person.evangeline_aldrine
+      - person.chris_aldrine
+      - person.keona_aldrine
