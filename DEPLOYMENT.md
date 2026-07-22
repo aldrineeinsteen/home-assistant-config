@@ -6,10 +6,10 @@ scripts, scenes, themes, and candidate dashboards are loaded directly from the
 checkout. Home Assistant's UI-managed data remains in `/config/.storage` and is
 not copied, replaced, or committed.
 
-This activates the repository without replacing `/config` wholesale. The old
-`/config/automations.yaml`, `scripts.yaml`, and `scenes.yaml` are retained as
-rollback evidence but become unreferenced after the bootstrap is activated.
-Do not delete them during the migration.
+This activates the repository without replacing `/config` wholesale. During
+shadow testing, the old `/config/automations.yaml`, `scripts.yaml`, and
+`scenes.yaml` remain unreferenced at the config root. After final verification,
+they are moved—not deleted—into the dated rollback directory.
 
 The live-instance restoration checklist is in
 `inventory/live-instance.yaml`. Never add or replace `secrets.yaml`, `.storage`,
@@ -133,6 +133,22 @@ If a device or mapping remains unavailable, leave the helper off. The rest of
 the repository configuration can remain active safely while the integration is
 repaired; do not guess a physical room mapping.
 
+## Stage 5 — archive the unreferenced legacy files
+
+After control has remained stable for at least one complete policy cycle,
+verify that the live bootstrap includes only the repository paths and that the
+Stage 0 copies have matching checksums. Move the unreferenced root files into
+the dated rollback directory with descriptive names, then run `ha core check`
+again. Do not delete them.
+
+The 22 July 2026 migration archived them as:
+
+- `legacy-unreferenced-automations.yaml`
+- `legacy-unreferenced-scripts.yaml`
+- `legacy-unreferenced-scenes.yaml`
+
+No restart is required after moving files that were already unreferenced.
+
 ## Verification after every update
 
 For future changes:
@@ -153,10 +169,10 @@ If behavior is wrong after restart:
 
 1. Turn off `input_boolean.heating_policy_control_enabled` if Home Assistant is
    responsive.
-2. Restore the Stage 0 `configuration.yaml` copy.
-3. Run `ha core check`; restart only after it succeeds.
-4. The restored bootstrap reactivates the old top-level files that were kept in
-   place.
+2. Copy the Stage 0 `configuration.yaml`, `automations.yaml`, `scripts.yaml`,
+   and `scenes.yaml` back to `/config` from the dated rollback directory.
+3. Run `ha core check`; restart only after it succeeds. The restored bootstrap
+   then reactivates the restored top-level files.
 
 Use the full Home Assistant backup only if file-level rollback is insufficient
 or UI-managed state changed. A backup restore overwrites selected live state,
