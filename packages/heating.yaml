@@ -307,13 +307,13 @@ template:
           {% set scheduled =
             state_attr('schedule.heating_weekly_mode', 'target') %}
           {% if mode == 'Boost' %}
-            {{ states('input_number.heating_boost_target') | float }}
+            {{ states('input_number.heating_boost_target') | float(22) }}
           {% elif mode in ['Home', 'Sleep']
             and is_state('schedule.heating_weekly_mode', 'on')
             and is_number(scheduled) %}
             {{ [[scheduled | float, 15] | max, 24] | min }}
           {% else %}
-            {{ states('input_number.heating_target_ground_floor') | float }}
+            {{ states('input_number.heating_target_ground_floor') | float(20) }}
           {% endif %}
 
       - name: Heating First Floor Effective Target
@@ -336,13 +336,13 @@ template:
           {% set scheduled =
             state_attr('schedule.heating_weekly_mode', 'target') %}
           {% if mode == 'Boost' %}
-            {{ states('input_number.heating_boost_target') | float }}
+            {{ states('input_number.heating_boost_target') | float(22) }}
           {% elif mode in ['Home', 'Sleep']
             and is_state('schedule.heating_weekly_mode', 'on')
             and is_number(scheduled) %}
             {{ [[scheduled | float, 15] | max, 24] | min }}
           {% else %}
-            {{ states('input_number.heating_target_first_floor') | float }}
+            {{ states('input_number.heating_target_first_floor') | float(20) }}
           {% endif %}
 
       - name: Heating Chris Room Effective Target
@@ -365,13 +365,13 @@ template:
           {% set scheduled =
             state_attr('schedule.heating_weekly_mode', 'target') %}
           {% if mode == 'Boost' %}
-            {{ states('input_number.heating_boost_target') | float }}
+            {{ states('input_number.heating_boost_target') | float(22) }}
           {% elif mode in ['Home', 'Sleep']
             and is_state('schedule.heating_weekly_mode', 'on')
             and is_number(scheduled) %}
             {{ [[scheduled | float, 15] | max, 24] | min }}
           {% else %}
-            {{ states('input_number.heating_target_chris_room') | float }}
+            {{ states('input_number.heating_target_chris_room') | float(20) }}
           {% endif %}
 
   - binary_sensor:
@@ -388,13 +388,23 @@ template:
           }}
         state: >
           {% set mode = states('sensor.heating_effective_mode') %}
-          {% set current =
-            states('sensor.ground_floor_avg_temperature') | float %}
-          {% set target =
-            states('sensor.heating_ground_floor_effective_target') | float %}
+          {% set current_state =
+            states('sensor.ground_floor_avg_temperature') %}
+          {% set target_state =
+            states('sensor.heating_ground_floor_effective_target') %}
+          {% set margin_state =
+            states('input_number.heating_on_margin') %}
+          {% set current = current_state | float(0) %}
+          {% set target = target_state | float(0) %}
           {% set hysteresis =
-            states('input_number.heating_on_margin') | float(0.3) %}
-          {% if mode not in ['Home', 'Sleep', 'Boost'] %}
+            margin_state | float(0.3) %}
+          {% if not (
+            is_number(current_state)
+            and is_number(target_state)
+            and is_number(margin_state)
+          ) %}
+            false
+          {% elif mode not in ['Home', 'Sleep', 'Boost'] %}
             false
           {% elif this.state == 'on' %}
             {{ current < target + hysteresis }}
@@ -422,13 +432,23 @@ template:
           }}
         state: >
           {% set mode = states('sensor.heating_effective_mode') %}
-          {% set current =
-            states('sensor.first_floor_avg_temperature') | float %}
-          {% set target =
-            states('sensor.heating_first_floor_effective_target') | float %}
+          {% set current_state =
+            states('sensor.first_floor_avg_temperature') %}
+          {% set target_state =
+            states('sensor.heating_first_floor_effective_target') %}
+          {% set margin_state =
+            states('input_number.heating_on_margin') %}
+          {% set current = current_state | float(0) %}
+          {% set target = target_state | float(0) %}
           {% set hysteresis =
-            states('input_number.heating_on_margin') | float(0.3) %}
-          {% if mode not in ['Home', 'Sleep', 'Boost'] %}
+            margin_state | float(0.3) %}
+          {% if not (
+            is_number(current_state)
+            and is_number(target_state)
+            and is_number(margin_state)
+          ) %}
+            false
+          {% elif mode not in ['Home', 'Sleep', 'Boost'] %}
             false
           {% elif this.state == 'on' %}
             {{ current < target + hysteresis }}
@@ -456,13 +476,23 @@ template:
           }}
         state: >
           {% set mode = states('sensor.heating_effective_mode') %}
-          {% set current =
-            states('sensor.chris_bedroom_current_temperature') | float %}
-          {% set target =
-            states('sensor.heating_chris_room_effective_target') | float %}
+          {% set current_state =
+            states('sensor.chris_bedroom_current_temperature') %}
+          {% set target_state =
+            states('sensor.heating_chris_room_effective_target') %}
+          {% set margin_state =
+            states('input_number.heating_on_margin') %}
+          {% set current = current_state | float(0) %}
+          {% set target = target_state | float(0) %}
           {% set hysteresis =
-            states('input_number.heating_on_margin') | float(0.3) %}
-          {% if mode not in ['Home', 'Sleep', 'Boost'] %}
+            margin_state | float(0.3) %}
+          {% if not (
+            is_number(current_state)
+            and is_number(target_state)
+            and is_number(margin_state)
+          ) %}
+            false
+          {% elif mode not in ['Home', 'Sleep', 'Boost'] %}
             false
           {% elif this.state == 'on' %}
             {{ current < target + hysteresis }}
