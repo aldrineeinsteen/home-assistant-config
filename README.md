@@ -13,6 +13,9 @@ The initial export was taken from Home Assistant 2026.7.2 on 21 July 2026.
 - `packages/energy_tariffs.yaml` for tariff template sensors
 - `dashboards/*.yaml` for the exported Lovelace dashboards
 - `hacs/installed.yaml` for the sanitized HACS extension inventory
+- `inventory/live-instance.yaml` for the sanitized server coverage audit
+- `DEPLOYMENT.md` for the non-destructive application and rollback procedure
+- `themes/` as an empty, clean-install-safe target for the configured theme include
 - reusable Home Assistant blueprints
 
 ## Deliberately excluded
@@ -34,8 +37,24 @@ vendoring their generated files in this repository. HACS runtime files under
 `.storage` are intentionally excluded because they are generated, contain
 machine-specific state, and are not a portable backup format.
 
-No HACS frontend plugins, Lovelace resources, or custom HACS repositories were
-installed at export time; the empty inventory lists make that state explicit.
+The Bambu Lab integration also registers its bundled card module at
+`/bambu_lab/ha-bambu-lab-cards.js?v=2.6.51`. The resource is recorded in the
+inventory but remains managed by HACS. No custom HACS repositories were present
+at the 22 July 2026 audit.
+
+## Live-instance coverage
+
+The read-only 22 July 2026 audit is recorded in
+`inventory/live-instance.yaml`. It covers every live top-level YAML file and
+blueprint, all four dashboards, configured integration domains, custom
+integrations and their versions, Lovelace resources, and installed add-ons.
+
+The repository deliberately does not duplicate UI-managed credentials,
+pairings, users, devices, entity registries, zones, add-on configuration, or
+runtime state. Those features are represented as a sanitized restoration
+checklist and must be retained through a Home Assistant backup or recreated
+through the UI. This distinction prevents the repository from becoming a
+sensitive and unreliable copy of `.storage`.
 
 ## Dashboards
 
@@ -168,6 +187,10 @@ Dashboard and troubleshooting entities are:
 - `sensor.heating_requested_target`
 - `sensor.heating_boiler_lockout_reason`
 
+The Overview dashboard uses these current policy entities and no longer points
+to the superseded turn-on/turn-off automation IDs from the original live
+dashboard export.
+
 Lockout reasons distinguish minimum-on/off timing, manual and presence modes,
 warm-weather cutoff, unavailable Hive control, invalid modes, all indoor
 sensors failing, and the ordinary absence of zone demand.
@@ -196,8 +219,9 @@ Household presence includes Aldrine, Evangeline, Chris, and Keona.
 
 1. Edit configuration on a branch.
 2. Open a pull request; GitHub Actions checks all tracked YAML.
-3. Merge after review, then copy the changed files to `/config` on the
-   Raspberry Pi and run Home Assistant's configuration check before restarting.
+3. Follow `DEPLOYMENT.md` to back up the instance, merge the repository as an
+   overlay, check the configuration, verify behavior, and retain a tested
+   rollback path. Never replace `/config` wholesale.
 
 The repository intentionally contains entity IDs and household automation
 names because they are required by the configuration. Keep the repository

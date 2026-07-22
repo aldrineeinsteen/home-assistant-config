@@ -14,6 +14,10 @@ To rebuild an instance:
    `lovelace_resources` in Home Assistant.
 4. Add any `custom_repositories` before installing their integrations.
 
-Empty lists are intentional: no HACS frontend plugins, Lovelace resources, or
-custom repositories were present when the inventory was exported on
-21 July 2026.
+The Bambu Lab integration also registers its bundled Lovelace card module. Its
+resource URL is recorded so a clean installation can be checked after the
+integration is installed. The resource remains managed by HACS rather than by
+`configuration.yaml`.
+
+The empty `custom_repositories` list is intentional: no custom HACS repository
+was present when the inventory was rechecked on 22 July 2026.

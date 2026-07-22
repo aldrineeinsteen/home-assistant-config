@@ -115,9 +115,19 @@ views:
           - type: heading
             heading: Heating Logic
           - type: entities
-            title: Conditions
+            title: Mode and Conditions
             show_header_toggle: false
             entities:
+              - entity: sensor.heating_effective_mode
+                name: Effective Mode
+              - entity: sensor.heating_effective_mode_reason
+                name: Mode Reason
+              - entity: input_select.heating_manual_mode
+                name: Manual Mode
+              - entity: schedule.heating_weekly_mode
+                name: Weekly Schedule
+              - entity: timer.heating_boost
+                name: Boost Timer
               - entity: binary_sensor.anyone_home
                 name: Anyone Home
               - entity: binary_sensor.outside_warm_enough_for_heating_off
@@ -132,6 +142,16 @@ views:
                 name: Outside Cutoff
               - entity: input_number.heating_freezing_cutoff
                 name: Freezing Cutoff
+          - type: entities
+            title: Heating Actions
+            show_header_toggle: false
+            entities:
+              - entity: script.heating_start_boost
+                name: Start Boost
+              - entity: script.heating_cancel_boost
+                name: Cancel Boost
+              - entity: script.heating_clear_manual_mode
+                name: Return To Auto
   - title: Automations
     path: automations
     type: sections
@@ -188,14 +208,18 @@ views:
             title: Heating Control
             show_header_toggle: false
             entities:
-              - entity: automation.heating_turn_on_home_cold
-                name: Heating - Turn On (Home & Cold)
-              - entity: automation.heating_turn_off_away_or_warm
-                name: Heating - Turn Off (Away or Warm)
-              - entity: binary_sensor.anyone_home
-                name: Anyone Home
-              - entity: binary_sensor.outside_warm_enough_for_heating_off
-                name: Outside Warm Enough
+              - entity: automation.heating_boiler_demand_policy
+                name: Boiler Demand Policy
+              - entity: automation.chris_room_trv_manager
+                name: Chris Room TRV Manager
+              - entity: binary_sensor.heating_boiler_demand
+                name: Boiler Demand
+              - entity: sensor.heating_active_zones
+                name: Active Zones
+              - entity: sensor.heating_requested_target
+                name: Requested Target
+              - entity: sensor.heating_boiler_lockout_reason
+                name: Lockout Reason
       - type: grid
         cards:
           - type: heading

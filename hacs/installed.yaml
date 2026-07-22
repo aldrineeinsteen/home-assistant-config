@@ -1,5 +1,5 @@
 schema_version: 1
-exported_at: "2026-07-21"
+exported_at: "2026-07-22"
 home_assistant_version: "2026.7.2"
 
 hacs:
@@ -25,6 +25,14 @@ integrations:
     repository: tomae/homeassistant-openmediavault
     version: "0.0.0"
 
-frontend_plugins: []
-lovelace_resources: []
+frontend_plugins:
+  - name: Bambu Lab Cards
+    repository: greghesp/ha-bambulab
+    version: "2.6.51"
+    bundled_with: bambu_lab
+
+lovelace_resources:
+  - url: /bambu_lab/ha-bambu-lab-cards.js?v=2.6.51
+    type: module
+    managed_by: hacs
 custom_repositories: []
