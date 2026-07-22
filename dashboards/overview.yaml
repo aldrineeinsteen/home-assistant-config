@@ -108,7 +108,7 @@ views:
             entity: climate.radiator_valve_1_master_bedroom_3
             name: Master Bedroom TRV 2
           - type: tile
-            entity: sensor.master_bedroom_current_temperature
+            entity: sensor.radiator_valve_1_current_temperature
             name: Master Bedroom Temp 2
       - type: grid
         cards:
