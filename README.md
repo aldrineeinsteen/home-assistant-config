@@ -11,6 +11,7 @@ The initial export was taken from Home Assistant 2026.7.2 on 21 July 2026.
 - `scenes.yaml`
 - `packages/heating.yaml` for reproducible heating settings
 - `packages/energy_tariffs.yaml` for tariff template sensors
+- `dashboards/*.yaml` for the exported Lovelace dashboards
 - `hacs/installed.yaml` for the sanitized HACS extension inventory
 - reusable Home Assistant blueprints
 
@@ -35,6 +36,28 @@ machine-specific state, and are not a portable backup format.
 
 No HACS frontend plugins, Lovelace resources, or custom HACS repositories were
 installed at export time; the empty inventory lists make that state explicit.
+
+## Dashboards
+
+The four dashboards registered on the Raspberry Pi were exported through Home
+Assistant's read-only dashboard editor and converted to normal YAML files:
+
+- `dashboards/overview.yaml` — Overview, shown in the sidebar.
+- `dashboards/devices.yaml` — Devices, shown in the sidebar.
+- `dashboards/energy.yaml` — Energy, shown in the sidebar.
+- `dashboards/map.yaml` — Map, hidden from the sidebar.
+
+`configuration.yaml` declares each file as a YAML dashboard. The Overview,
+Devices, and Energy paths remain `lovelace`, `dashboard-devices`, and
+`dashboard-energy`. Home Assistant requires additional YAML dashboard keys to
+contain a hyphen, so the exported Map is registered as `dashboard-map` rather
+than the live storage-mode `map` path. Its `strategy: map` definition remains
+auto-generated from the entities available on each installation.
+
+Only portable dashboard definitions and their non-secret metadata are tracked.
+The source `.storage` files, browser state, credentials, and runtime state were
+not copied. Lovelace resources remain in storage mode so HACS can manage any
+future frontend resources independently of these dashboard files.
 
 ## Reusable variables
 

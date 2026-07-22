@@ -13,6 +13,37 @@ http:
 frontend:
   themes: !include_dir_merge_named themes
 
+lovelace:
+  dashboards:
+    lovelace:
+      mode: yaml
+      filename: dashboards/overview.yaml
+      title: Overview
+      icon: mdi:view-dashboard
+      show_in_sidebar: true
+      require_admin: false
+    dashboard-devices:
+      mode: yaml
+      filename: dashboards/devices.yaml
+      title: Devices
+      icon: mdi:devices
+      show_in_sidebar: true
+      require_admin: false
+    dashboard-energy:
+      mode: yaml
+      filename: dashboards/energy.yaml
+      title: Energy
+      icon: mdi:home-lightning-bolt
+      show_in_sidebar: true
+      require_admin: false
+    dashboard-map:
+      mode: yaml
+      filename: dashboards/map.yaml
+      title: Map
+      icon: mdi:map
+      show_in_sidebar: false
+      require_admin: false
+
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml

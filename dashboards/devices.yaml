@@ -1,0 +1,127 @@
+views:
+  - title: Devices
+    path: devices
+    icon: mdi:power-plug
+    theme: Backend-selected
+    cards:
+      - type: heading
+        heading: Quick Controls
+        icon: mdi:flash
+      - type: horizontal-stack
+        cards:
+          - type: button
+            entity: switch.smart_plug_mini_4
+            name: Hive Hub
+            icon: mdi:router-wireless
+            tap_action:
+              action: toggle
+          - type: button
+            entity: light.garden_light
+            name: Garden Light
+            icon: mdi:lightbulb
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.smart_plug_mini
+            name: Window Lights A
+            icon: mdi:string-lights
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.smart_plug_mini_2
+            name: Window Lights B
+            icon: mdi:string-lights
+            tap_action:
+              action: toggle
+      - type: heading
+        heading: Grow Setup
+        icon: mdi:sprout
+      - type: entities
+        title: Grow Equipment
+        show_header_toggle: false
+        entities:
+          - entity: switch.top_lights_seed_rack_socket_1
+            name: Grow Lights Top Rack
+          - entity: switch.bottom_lights_seed_rack_socket_1
+            name: Grow Lights Bottom Rack
+          - entity: switch.heated_propagator_socket_1
+            name: Heated Propagator
+      - type: heading
+        heading: Christmas Lights
+        icon: mdi:pine-tree
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: switch.smart_plug_mini
+            name: Window Lights A
+          - entity: switch.smart_plug_mini_2
+            name: Window Lights B
+      - type: heading
+        heading: Garden and Outdoor
+        icon: mdi:tree
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: light.garden_light
+            name: Garden Light
+          - entity: switch.wifi_smart_switch_switch_1
+            name: Front Garden Switch 1
+          - entity: switch.wifi_smart_switch_switch_2
+            name: Front Garden Switch 2
+      - type: heading
+        heading: Smart Plugs
+        icon: mdi:power-socket-uk
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: switch.spare_socket_socket_1
+            name: Spare Socket
+          - entity: switch.bambu_p1s_socket_1
+            name: Bambu P1S
+      - type: heading
+        heading: Ring Volume
+        icon: mdi:volume-high
+      - type: entities
+        title: Ring Speakers
+        show_header_toggle: false
+        entities:
+          - entity: number.front_door_volume
+            name: Front Door Volume
+          - entity: number.garden_volume
+            name: Garden Volume
+          - entity: number.kitchen_volume
+            name: Kitchen Volume
+          - entity: number.master_bedroom_volume
+            name: Master Bedroom Volume
+          - entity: number.upstairs_volume
+            name: Upstairs Volume
+      - type: heading
+        heading: Security and Detection
+        icon: mdi:shield-home
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: switch.front_door_motion_detection
+            name: Front Door Motion
+          - entity: switch.front_door_in_home_chime
+            name: Door Chime
+          - entity: switch.garden_motion_detection
+            name: Garden Motion
+      - type: heading
+        heading: Unavailable Devices
+        icon: mdi:alert-circle-outline
+      - type: conditional
+        conditions:
+          - entity: switch.smart_plug_mini_3
+            state: unavailable
+        card:
+          type: entities
+          show_header_toggle: false
+          entities:
+            - entity: switch.smart_plug_mini_3
+              name: Christmas Lights C
+      - type: entities
+        entities:
+          - entity: update.openmediavault_update
+            name: Update
+        title: OpenMediaVault

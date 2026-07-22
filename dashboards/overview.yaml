@@ -1,0 +1,210 @@
+title: Home
+views:
+  - title: Home
+    path: home
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Home
+          - type: entities
+            title: People
+            show_header_toggle: false
+            entities:
+              - entity: person.aldrine_einsteen
+                name: Aldy
+              - entity: person.evangeline_aldrine
+                name: Evangeline
+          - type: tile
+            entity: weather.forecast_home
+            name: Outside Weather
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heating
+          - type: thermostat
+            entity: climate.hive_control
+            name: Main Heating
+          - type: tile
+            entity: sensor.first_floor_avg_temperature
+            name: First Floor Avg Temp
+      - type: grid
+        cards:
+          - type: heading
+            heading: Security
+          - type: picture-entity
+            entity: camera.front_door_live_view
+            name: Front Door
+            camera_view: live
+            show_state: false
+            show_name: true
+          - type: picture-entity
+            entity: camera.garden_live_view
+            name: Garden
+            camera_view: live
+            show_state: false
+            show_name: true
+  - title: Heating
+    path: heating
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Main Heating
+          - type: thermostat
+            entity: climate.hive_control
+            name: Hive Heating
+          - type: tile
+            entity: sensor.outside_temperature
+            name: Outside Temperature
+      - type: grid
+        cards:
+          - type: heading
+            heading: Ground Floor
+          - type: tile
+            entity: input_number.heating_target_ground_floor
+            name: Ground Floor Target
+          - type: tile
+            entity: sensor.ground_floor_avg_temperature
+            name: Ground Floor Current
+      - type: grid
+        cards:
+          - type: heading
+            heading: First Floor
+          - type: tile
+            entity: input_number.heating_target_first_floor
+            name: First Floor Target
+          - type: tile
+            entity: sensor.first_floor_avg_temperature
+            name: First Floor Current
+      - type: grid
+        cards:
+          - type: heading
+            heading: Kids Room - Chris
+          - type: thermostat
+            entity: climate.chris_room_trv
+            name: Chris Room TRV
+          - type: tile
+            entity: sensor.chris_room_temperature
+            name: Chris Room Current
+          - type: tile
+            entity: input_number.heating_target_chris_room
+            name: Chris Room Target
+      - type: grid
+        cards:
+          - type: heading
+            heading: Bedroom Radiators
+          - type: tile
+            entity: climate.radiator_valve_1
+            name: Master Bedroom TRV 1
+          - type: tile
+            entity: sensor.radiator_valve_1_current_temperature
+            name: Master Bedroom Temp 1
+          - type: tile
+            entity: climate.radiator_valve_1_2
+            name: Master Bedroom TRV 2
+          - type: tile
+            entity: sensor.radiator_valve_1_current_temperature_2
+            name: Master Bedroom Temp 2
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heating Logic
+          - type: entities
+            title: Conditions
+            show_header_toggle: false
+            entities:
+              - entity: binary_sensor.anyone_home
+                name: Anyone Home
+              - entity: binary_sensor.outside_warm_enough_for_heating_off
+                name: Outside Warm Enough
+              - entity: input_number.heating_target_ground_floor
+                name: Ground Floor Target
+              - entity: input_number.heating_target_first_floor
+                name: First Floor Target
+              - entity: input_number.heating_target_chris_room
+                name: Chris Room Target
+              - entity: input_number.heating_outside_cutoff
+                name: Outside Cutoff
+              - entity: input_number.heating_freezing_cutoff
+                name: Freezing Cutoff
+  - title: Automations
+    path: automations
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hive Restart
+          - type: entities
+            title: Restart Automation
+            show_header_toggle: false
+            entities:
+              - entity: automation.restart
+                name: Hive Hub - Restart
+              - entity: sensor.hive_restart_last_run_minutes
+                name: Minutes Since Last Run
+              - entity: binary_sensor.hive_control_available
+                name: Hive Control Available
+          - type: tile
+            entity: switch.smart_plug_mini_4
+            name: Hive Hub Plug
+      - type: grid
+        cards:
+          - type: heading
+            heading: Seed Rack Status
+          - type: entities
+            title: Seed Rack Lights
+            show_header_toggle: false
+            entities:
+              - entity: switch.top_lights_seed_rack_socket_1
+                name: Top Lights
+              - entity: switch.bottom_lights_seed_rack_socket_1
+                name: Bottom Lights
+          - type: entities
+            title: Seed Rack Health
+            show_header_toggle: false
+            entities:
+              - entity: binary_sensor.seed_rack_lights_should_be_on
+                name: Should Be On
+              - entity: binary_sensor.seed_rack_lights_in_sync
+                name: In Sync
+          - type: entities
+            title: Seed Rack Automation
+            show_header_toggle: false
+            entities:
+              - entity: automation.seed_rack_light_failsafe
+                name: Seed Rack Lights - Failsafe
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heating Automations
+          - type: entities
+            title: Heating Control
+            show_header_toggle: false
+            entities:
+              - entity: automation.heating_turn_on_home_cold
+                name: Heating - Turn On (Home & Cold)
+              - entity: automation.heating_turn_off_away_or_warm
+                name: Heating - Turn Off (Away or Warm)
+              - entity: binary_sensor.anyone_home
+                name: Anyone Home
+              - entity: binary_sensor.outside_warm_enough_for_heating_off
+                name: Outside Warm Enough
+      - type: grid
+        cards:
+          - type: heading
+            heading: Seasonal Lighting
+          - type: entities
+            title: Christmas Lights
+            show_header_toggle: false
+            entities:
+              - entity: automation.christmas_lights_on
+                name: Christmas Lights - On
+              - entity: automation.christmas_lights_off
+                name: Christmas Lights - Off

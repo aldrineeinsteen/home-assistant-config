@@ -1,0 +1,277 @@
+views:
+  - title: Overview
+    path: energy-overview
+    icon: mdi:home-lightning-bolt-outline
+    theme: Backend-selected
+    cards:
+      - type: heading
+        heading: Energy Overview
+        icon: mdi:flash
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_current_rate
+            name: Electricity Rate
+            min: 0
+            max: 0.5
+            severity:
+              green: 0
+              yellow: 0.15
+              red: 0.3
+          - type: gauge
+            entity: sensor.octopus_energy_gas_e6e12701832423_7436504601_current_rate
+            name: Gas Rate
+            min: 0
+            max: 0.2
+            severity:
+              green: 0
+              yellow: 0.05
+              red: 0.1
+      - type: entities
+        title: Tariff Summary
+        show_header_toggle: false
+        entities:
+          - entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_current_rate
+            name: Electricity Current Rate
+          - entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_current_standing_charge
+            name: Electricity Standing Charge
+          - entity: sensor.octopus_energy_gas_e6e12701832423_7436504601_current_rate
+            name: Gas Current Rate
+          - entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_current_standing_charge
+            name: Gas Standing Charge
+          - entity: >-
+              binary_sensor.octopus_energy_electricity_22l4538283_1023542710990_off_peak
+            name: Off Peak Electricity
+      - type: heading
+        heading: Yesterday Totals
+        icon: mdi:calendar
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_previous_accumulative_consumption
+            name: Electricity Yesterday
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_previous_accumulative_cost
+            name: Electricity Cost Yesterday
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_consumption_kwh
+            name: Gas Yesterday
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_cost
+            name: Gas Cost Yesterday
+      - type: heading
+        heading: Home Assistant Energy
+        icon: mdi:chart-sankey
+      - type: energy-distribution
+      - type: energy-usage-graph
+      - type: heading
+        heading: Octopus Extras
+        icon: mdi:star
+      - type: entities
+        title: Octopus Extras
+        show_header_toggle: false
+        entities:
+          - entity: sensor.octopus_energy_a_92e14e0f_octoplus_points
+            name: Octoplus Points
+          - entity: binary_sensor.octopus_energy_a_92e14e0f_octoplus_saving_sessions
+            name: Saving Session Active
+          - entity: calendar.octopus_energy_a_92e14e0f_greener_nights
+            name: Greener Nights
+          - entity: >-
+              sensor.octopus_energy_a_92e14e0f_wheel_of_fortune_spins_electricity
+            name: Wheel Spins Electricity
+          - entity: sensor.octopus_energy_a_92e14e0f_wheel_of_fortune_spins_gas
+            name: Wheel Spins Gas
+      - type: entities
+        title: Related Devices
+        show_header_toggle: false
+        entities:
+          - entity: switch.smart_plug_mini_4
+            name: Hive Hub Plug
+  - title: Electricity
+    path: electricity
+    icon: mdi:lightning-bolt
+    theme: Backend-selected
+    cards:
+      - type: heading
+        heading: Electricity
+        icon: mdi:transmission-tower
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_current_rate
+            name: Current Rate
+            min: 0
+            max: 0.5
+            severity:
+              green: 0
+              yellow: 0.15
+              red: 0.3
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_current_standing_charge
+            name: Standing Charge
+      - type: entities
+        title: Electricity Tariff
+        show_header_toggle: false
+        entities:
+          - entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_current_rate
+            name: Current Rate
+          - entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_next_rate
+            name: Next Rate
+          - entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_current_standing_charge
+            name: Standing Charge
+          - entity: >-
+              binary_sensor.octopus_energy_electricity_22l4538283_1023542710990_off_peak
+            name: Off Peak
+      - type: heading
+        heading: Yesterday
+        icon: mdi:calendar
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_previous_accumulative_consumption
+            name: Consumption Yesterday
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_electricity_22l4538283_1023542710990_previous_accumulative_cost
+            name: Cost Yesterday
+      - type: heading
+        heading: Trends
+        icon: mdi:chart-bar
+      - type: statistics-graph
+        title: Electricity Consumption
+        days_to_show: 14
+        chart_type: bar
+        stat_types:
+          - change
+        entities:
+          - >-
+            sensor.octopus_energy_electricity_22l4538283_1023542710990_previous_accumulative_consumption
+      - type: statistics-graph
+        title: Electricity Cost
+        days_to_show: 14
+        chart_type: bar
+        stat_types:
+          - change
+        entities:
+          - >-
+            sensor.octopus_energy_electricity_22l4538283_1023542710990_previous_accumulative_cost
+      - type: entities
+        title: Electricity Reference
+        show_header_toggle: false
+        entities:
+          - entity: >-
+              event.octopus_energy_electricity_22l4538283_1023542710990_current_day_rates
+            name: Current Day Rates
+          - entity: >-
+              event.octopus_energy_electricity_22l4538283_1023542710990_next_day_rates
+            name: Next Day Rates
+          - entity: >-
+              event.octopus_energy_electricity_22l4538283_1023542710990_previous_day_rates
+            name: Previous Day Rates
+  - title: Gas
+    path: gas
+    icon: mdi:fire
+    theme: Backend-selected
+    cards:
+      - type: heading
+        heading: Gas
+        icon: mdi:meter-gas
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.octopus_energy_gas_e6e12701832423_7436504601_current_rate
+            name: Current Rate
+            min: 0
+            max: 0.2
+            severity:
+              green: 0
+              yellow: 0.05
+              red: 0.1
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_current_standing_charge
+            name: Standing Charge
+      - type: entities
+        title: Gas Tariff
+        show_header_toggle: false
+        entities:
+          - entity: sensor.octopus_energy_gas_e6e12701832423_7436504601_current_rate
+            name: Current Rate
+          - entity: sensor.octopus_energy_gas_e6e12701832423_7436504601_next_rate
+            name: Next Rate
+          - entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_current_standing_charge
+            name: Standing Charge
+      - type: heading
+        heading: Yesterday
+        icon: mdi:calendar
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_consumption_kwh
+            name: Consumption Yesterday (kWh)
+          - type: entity
+            entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_cost
+            name: Cost Yesterday
+      - type: entities
+        title: Gas Meter Totals
+        show_header_toggle: false
+        entities:
+          - entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_consumption_kwh
+            name: Previous Consumption (kWh)
+          - entity: >-
+              sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_consumption_m3
+            name: Previous Consumption (m³)
+      - type: heading
+        heading: Trends
+        icon: mdi:chart-bar
+      - type: statistics-graph
+        title: Gas Consumption
+        days_to_show: 14
+        chart_type: bar
+        stat_types:
+          - change
+        entities:
+          - >-
+            sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_consumption_kwh
+      - type: statistics-graph
+        title: Gas Cost
+        days_to_show: 14
+        chart_type: bar
+        stat_types:
+          - change
+        entities:
+          - >-
+            sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_cost
+      - type: entities
+        title: Gas Reference
+        show_header_toggle: false
+        entities:
+          - entity: >-
+              event.octopus_energy_gas_e6e12701832423_7436504601_current_day_rates
+            name: Current Day Rates
+          - entity: event.octopus_energy_gas_e6e12701832423_7436504601_next_day_rates
+            name: Next Day Rates
+          - entity: >-
+              event.octopus_energy_gas_e6e12701832423_7436504601_previous_day_rates
+            name: Previous Day Rates
