@@ -255,8 +255,6 @@ views:
             title: Garden Motion Controls
             show_header_toggle: false
             entities:
-              - entity: light.garden_light
-                name: Garden Light
               - entity: switch.garden_motion_detection
                 name: Garden Motion Detection
               - entity: input_select.garden_motion_pause_duration
@@ -267,5 +265,3 @@ views:
                 name: Start Motion Pause
               - entity: script.garden_resume_motion
                 name: Resume Motion Now
-              - entity: automation.garden_enforce_motion_pause
-                name: Pause Guard

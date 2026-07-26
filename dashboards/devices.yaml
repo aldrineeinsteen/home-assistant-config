@@ -16,12 +16,6 @@ views:
             tap_action:
               action: toggle
           - type: button
-            entity: light.garden_light
-            name: Garden Light
-            icon: mdi:lightbulb
-            tap_action:
-              action: toggle
-          - type: button
             entity: switch.smart_plug_mini
             name: Window Lights A
             icon: mdi:string-lights
@@ -62,8 +56,6 @@ views:
       - type: entities
         show_header_toggle: false
         entities:
-          - entity: light.garden_light
-            name: Garden Light
           - entity: switch.wifi_smart_switch_switch_1
             name: Front Garden Switch 1
           - entity: switch.wifi_smart_switch_switch_2

@@ -133,9 +133,9 @@
 - id: ring_motion_mode_manager
   alias: Ring Motion Mode Manager
   description: >
-    Manage Ring motion detection based on home presence, time, and the garden
-    pause timer. Ring owns motion-activated garden lighting; this automation
-    never turns the garden light on.
+    Keep Front Door motion enabled and apply the Garden motion policy. Garden
+    motion is always enabled from 21:00 to 05:00, regardless of presence,
+    unless the dashboard pause timer is active.
   trigger:
   - platform: state
     entity_id: binary_sensor.anyone_home

@@ -119,12 +119,17 @@ motion detection according to presence and time, while
 Select 30, 60, or 120 minutes with
 `input_select.garden_motion_pause_duration`, then run
 `script.garden_pause_motion`. While the timer is active, garden motion
-detection is off and any Ring-side attempt to illuminate the garden light is
-immediately turned off. Because Ring reports light commands before the
-physical floodlight confirms them, the pause guard retries the off command and
-reapplies it every 30 seconds. When the timer finishes—or
-`script.garden_resume_motion` is run—the normal presence/time policy is
-reapplied automatically.
+detection is off and Home Assistant sends one unconditional light-off command.
+When the timer finishes—or `script.garden_resume_motion` is run—the normal
+presence/time policy is reapplied automatically. From 21:00 to 05:00, Garden
+motion is always enabled regardless of whether anyone is home; during the day
+it remains enabled while the home is unoccupied.
+
+The dashboard deliberately exposes the motion control rather than
+`light.garden_light`. Ring reports light commands optimistically, so that light
+entity can display Off even when the physical floodlight did not receive the
+command. Each motion-policy transition sends an unconditional off command to
+clear a latched/manual light state before Ring motion control resumes.
 
 ## Heating modes
 
