@@ -116,6 +116,11 @@ the Ring device detects motion. The Ring Motion Mode Manager controls camera
 motion detection according to presence and time, while
 `timer.garden_motion_pause` temporarily overrides that policy.
 
+`input_boolean.garden_automation_enabled` is the dashboard master control.
+Turning it off suspends the Garden time/presence policy and pause controls,
+cancels any attempt to re-enable Garden motion, and sends motion-off and
+light-off commands. Turning it on reapplies the normal policy immediately.
+
 Select 30, 60, or 120 minutes with
 `input_select.garden_motion_pause_duration`, then run
 `script.garden_pause_motion`. While the timer is active, garden motion

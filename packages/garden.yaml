@@ -8,6 +8,11 @@ input_select:
     initial: "30 minutes"
     icon: mdi:timer-cog-outline
 
+input_boolean:
+  garden_automation_enabled:
+    name: Garden Motion Automation
+    icon: mdi:motion-sensor
+
 timer:
   garden_motion_pause:
     name: Garden Motion Pause
@@ -31,6 +36,8 @@ script:
     mode: restart
     sequence:
       - variables:
+          automation_enabled: >-
+            {{ is_state('input_boolean.garden_automation_enabled', 'on') }}
           pause_state: "{{ states('timer.garden_motion_pause') }}"
           anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
           is_daytime: >
@@ -40,9 +47,18 @@ script:
             }}
           motion_should_be_enabled: >
             {{
-              pause_state == 'idle'
+              automation_enabled
+              and pause_state == 'idle'
               and (not anyone_home or not is_daytime)
             }}
+      - if:
+          - condition: template
+            value_template: >-
+              {{ not automation_enabled and pause_state != 'idle' }}
+        then:
+          - action: timer.cancel
+            target:
+              entity_id: timer.garden_motion_pause
       - choose:
           - conditions:
               - condition: template
@@ -65,6 +81,9 @@ script:
     icon: mdi:motion-sensor-off
     mode: restart
     sequence:
+      - condition: state
+        entity_id: input_boolean.garden_automation_enabled
+        state: "on"
       - action: timer.start
         target:
           entity_id: timer.garden_motion_pause
@@ -98,13 +117,16 @@ automation:
     id: garden_reapply_motion_policy
     description: >
       Apply the garden motion policy when a pause starts, finishes, or is
-      cancelled, or when Ring reports the motion switch has changed. An idle
-      timer restores the normal home/time policy.
+      cancelled, when Ring reports the motion switch has changed, or when the
+      master control changes. An idle timer restores the normal home/time
+      policy only while the master control is enabled.
     mode: restart
     trigger:
       - platform: state
         entity_id: timer.garden_motion_pause
       - platform: state
         entity_id: switch.garden_motion_detection
+      - platform: state
+        entity_id: input_boolean.garden_automation_enabled
     action:
       - action: script.garden_apply_motion_policy

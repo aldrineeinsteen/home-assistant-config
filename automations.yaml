@@ -135,7 +135,8 @@
   description: >
     Keep Front Door motion enabled and apply the Garden motion policy. Garden
     motion is always enabled from 21:00 to 05:00, regardless of presence,
-    unless the dashboard pause timer is active.
+    unless the dashboard pause timer is active or the Garden master control is
+    disabled.
   trigger:
   - platform: state
     entity_id: binary_sensor.anyone_home
