@@ -11,6 +11,7 @@ The initial export was taken from Home Assistant 2026.7.2 on 21 July 2026.
 - `scenes.yaml`
 - `packages/heating.yaml` for reproducible heating settings
 - `packages/household.yaml` for portable household, weather, and room templates
+- `packages/garden.yaml` for Ring motion policy and temporary pause controls
 - `packages/energy_tariffs.yaml` for tariff template sensors
 - `dashboards/*.yaml` for the exported Lovelace dashboards
 - `hacs/installed.yaml` for the sanitized HACS extension inventory
@@ -106,6 +107,22 @@ The captured defaults are 20°C for the ground floor, first floor, and Chris
 room, 13°C for the outside warm-weather cutoff, and 6°C for the freezing
 cutoff. The previously hardcoded defaults are 12°C for the away setback, 8°C
 for Chris room frost protection, and 0.3°C for demand hysteresis.
+
+## Garden motion lighting
+
+Ring owns the garden camera's motion-activated light behavior. No repository
+automation turns `light.garden_light` on: the light can illuminate only after
+the Ring device detects motion. The Ring Motion Mode Manager controls camera
+motion detection according to presence and time, while
+`timer.garden_motion_pause` temporarily overrides that policy.
+
+Select 30, 60, or 120 minutes with
+`input_select.garden_motion_pause_duration`, then run
+`script.garden_pause_motion`. While the timer is active, garden motion
+detection is off and any Ring-side attempt to illuminate the garden light is
+immediately turned off. When the timer finishes—or
+`script.garden_resume_motion` is run—the normal presence/time policy is
+reapplied automatically.
 
 ## Heating modes
 

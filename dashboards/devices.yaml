@@ -107,6 +107,14 @@ views:
             name: Door Chime
           - entity: switch.garden_motion_detection
             name: Garden Motion
+          - entity: input_select.garden_motion_pause_duration
+            name: Garden Pause Duration
+          - entity: timer.garden_motion_pause
+            name: Garden Motion Pause
+          - entity: script.garden_pause_motion
+            name: Pause Garden Motion
+          - entity: script.garden_resume_motion
+            name: Resume Garden Motion Now
       - type: heading
         heading: Unavailable Devices
         icon: mdi:alert-circle-outline

@@ -1,0 +1,124 @@
+input_select:
+  garden_motion_pause_duration:
+    name: Garden Motion Pause Duration
+    options:
+      - "30 minutes"
+      - "60 minutes"
+      - "120 minutes"
+    initial: "30 minutes"
+    icon: mdi:timer-cog-outline
+
+timer:
+  garden_motion_pause:
+    name: Garden Motion Pause
+    duration: "00:30:00"
+    restore: true
+    icon: mdi:motion-sensor-off
+
+script:
+  garden_apply_motion_policy:
+    alias: Garden - Apply Motion Policy
+    icon: mdi:motion-sensor
+    mode: restart
+    sequence:
+      - variables:
+          pause_state: "{{ states('timer.garden_motion_pause') }}"
+          anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
+          is_daytime: >
+            {{
+              now().strftime('%H:%M:%S') >= '05:00:00'
+              and now().strftime('%H:%M:%S') < '21:00:00'
+            }}
+          motion_should_be_enabled: >
+            {{
+              pause_state == 'idle'
+              and (not anyone_home or not is_daytime)
+            }}
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ motion_should_be_enabled }}"
+            sequence:
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.garden_motion_detection
+        default:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.garden_motion_detection
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ pause_state != 'idle' }}"
+              - condition: state
+                entity_id: light.garden_light
+                state: "on"
+            sequence:
+              - action: light.turn_off
+                target:
+                  entity_id: light.garden_light
+
+  garden_pause_motion:
+    alias: Garden - Pause Motion
+    icon: mdi:motion-sensor-off
+    mode: restart
+    sequence:
+      - action: timer.start
+        target:
+          entity_id: timer.garden_motion_pause
+        data:
+          duration: >
+            {% set durations = {
+              '30 minutes': '00:30:00',
+              '60 minutes': '01:00:00',
+              '120 minutes': '02:00:00'
+            } %}
+            {{
+              durations.get(
+                states('input_select.garden_motion_pause_duration'),
+                '00:30:00'
+              )
+            }}
+      - action: script.garden_apply_motion_policy
+
+  garden_resume_motion:
+    alias: Garden - Resume Motion Now
+    icon: mdi:motion-sensor
+    mode: restart
+    sequence:
+      - action: timer.cancel
+        target:
+          entity_id: timer.garden_motion_pause
+      - action: script.garden_apply_motion_policy
+
+automation:
+  - alias: Garden - Reapply Motion Policy
+    id: garden_reapply_motion_policy
+    description: >
+      Apply the garden motion policy when a pause starts, finishes, or is
+      cancelled. An idle timer restores the normal home/time policy.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: timer.garden_motion_pause
+    action:
+      - action: script.garden_apply_motion_policy
+
+  - alias: Garden - Enforce Motion Pause
+    id: garden_enforce_motion_pause
+    description: >
+      Ring owns motion-activated lighting. If its hardware turns the light on
+      while motion is paused, turn the light straight back off.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: light.garden_light
+        to: "on"
+    condition:
+      - condition: template
+        value_template: >
+          {{ states('timer.garden_motion_pause') != 'idle' }}
+    action:
+      - action: light.turn_off
+        target:
+          entity_id: light.garden_light

@@ -132,7 +132,10 @@
   mode: single
 - id: ring_motion_mode_manager
   alias: Ring Motion Mode Manager
-  description: Manage Ring motion alerts based on home presence and time
+  description: >
+    Manage Ring motion detection based on home presence, time, and the garden
+    pause timer. Ring owns motion-activated garden lighting; this automation
+    never turns the garden light on.
   trigger:
   - platform: state
     entity_id: binary_sensor.anyone_home
@@ -148,58 +151,19 @@
       anyone_home: '{{ is_state(''binary_sensor.anyone_home'', ''on'') }}'
       is_daytime: '{{ now().strftime(''%H:%M:%S'') >= ''05:00:00'' and now().strftime(''%H:%M:%S'')
         < ''21:00:00'' }}'
-  - choose:
-    - conditions:
-      - condition: template
-        value_template: '{{ not anyone_home }}'
-      sequence:
-      - service: switch.turn_on
-        target:
-          entity_id:
-          - switch.front_door_motion_detection
-          - switch.garden_motion_detection
-      - service: system_log.write
-        data:
-          level: info
-          message: '[Ring Motion Mode Manager] Away mode active. Front Door Motion=on,
-            Garden Motion=on
-
-            '
-    - conditions:
-      - condition: template
-        value_template: '{{ anyone_home and is_daytime }}'
-      sequence:
-      - service: switch.turn_on
-        target:
-          entity_id:
-          - switch.front_door_motion_detection
-      - service: switch.turn_off
-        target:
-          entity_id:
-          - switch.garden_motion_detection
-      - service: system_log.write
-        data:
-          level: info
-          message: '[Ring Motion Mode Manager] Home daytime mode active. Front Door
-            Motion=on, Garden Motion=off
-
-            '
-    - conditions:
-      - condition: template
-        value_template: '{{ anyone_home and not is_daytime }}'
-      sequence:
-      - service: switch.turn_on
-        target:
-          entity_id:
-          - switch.front_door_motion_detection
-          - switch.garden_motion_detection
-      - service: system_log.write
-        data:
-          level: info
-          message: '[Ring Motion Mode Manager] Home night mode active. Front Door
-            Motion=on, Garden Motion=on
-
-            '
+  - action: switch.turn_on
+    target:
+      entity_id: switch.front_door_motion_detection
+  - action: script.garden_apply_motion_policy
+  - action: system_log.write
+    data:
+      level: info
+      message: >
+        [Ring Motion Mode Manager]
+        presence={{ 'home' if anyone_home else 'away' }},
+        period={{ 'day' if is_daytime else 'night' }},
+        garden_motion={{ states('switch.garden_motion_detection') }},
+        garden_pause={{ states('timer.garden_motion_pause') }}
   mode: single
 - alias: Heating Boiler Demand Policy
   id: heating_zone_policy_manager
