@@ -120,7 +120,9 @@ Select 30, 60, or 120 minutes with
 `input_select.garden_motion_pause_duration`, then run
 `script.garden_pause_motion`. While the timer is active, garden motion
 detection is off and any Ring-side attempt to illuminate the garden light is
-immediately turned off. When the timer finishes—or
+immediately turned off. Because Ring reports light commands before the
+physical floodlight confirms them, the pause guard retries the off command and
+reapplies it every 30 seconds. When the timer finishes—or
 `script.garden_resume_motion` is run—the normal presence/time policy is
 reapplied automatically.
 

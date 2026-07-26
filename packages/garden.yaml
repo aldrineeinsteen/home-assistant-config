@@ -16,6 +16,23 @@ timer:
     icon: mdi:motion-sensor-off
 
 script:
+  garden_force_light_off:
+    alias: Garden - Force Light Off
+    icon: mdi:lightbulb-off
+    mode: restart
+    sequence:
+      - repeat:
+          count: 3
+          sequence:
+            - action: light.turn_off
+              target:
+                entity_id: light.garden_light
+            - if:
+                - condition: template
+                  value_template: "{{ not repeat.last }}"
+              then:
+                - delay: "00:00:05"
+
   garden_apply_motion_policy:
     alias: Garden - Apply Motion Policy
     icon: mdi:motion-sensor
@@ -50,13 +67,8 @@ script:
           - conditions:
               - condition: template
                 value_template: "{{ pause_state != 'idle' }}"
-              - condition: state
-                entity_id: light.garden_light
-                state: "on"
             sequence:
-              - action: light.turn_off
-                target:
-                  entity_id: light.garden_light
+              - action: script.garden_force_light_off
 
   garden_pause_motion:
     alias: Garden - Pause Motion
@@ -107,18 +119,19 @@ automation:
   - alias: Garden - Enforce Motion Pause
     id: garden_enforce_motion_pause
     description: >
-      Ring owns motion-activated lighting. If its hardware turns the light on
-      while motion is paused, turn the light straight back off.
+      Ring reports light commands optimistically and can reassert the physical
+      floodlight from its device-side motion logic. While paused, retry the
+      off command when Ring reports the light on and every 30 seconds.
     mode: restart
     trigger:
       - platform: state
         entity_id: light.garden_light
         to: "on"
+      - platform: time_pattern
+        seconds: "/30"
     condition:
       - condition: template
         value_template: >
           {{ states('timer.garden_motion_pause') != 'idle' }}
     action:
-      - action: light.turn_off
-        target:
-          entity_id: light.garden_light
+      - action: script.garden_force_light_off
