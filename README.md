@@ -111,30 +111,29 @@ for Chris room frost protection, and 0.3°C for demand hysteresis.
 ## Garden motion lighting
 
 Ring owns the garden camera's motion-activated light behavior. No repository
-automation turns `light.garden_light` on: the light can illuminate only after
-the Ring device detects motion. The Ring Motion Mode Manager controls camera
-motion detection according to presence and time, while
+automation or script calls `light.garden_light` in either direction. The Ring
+Motion Mode Manager controls camera motion detection according to presence and
+time, while
 `timer.garden_motion_pause` temporarily overrides that policy.
 
 `input_boolean.garden_automation_enabled` is the dashboard master control.
 Turning it off suspends the Garden time/presence policy and pause controls,
-cancels any attempt to re-enable Garden motion, and sends motion-off and
-light-off commands. Turning it on reapplies the normal policy immediately.
+cancels any attempt to re-enable Garden motion, and sends a motion-off command.
+Turning it on reapplies the normal policy immediately.
 
 Select 30, 60, or 120 minutes with
 `input_select.garden_motion_pause_duration`, then run
 `script.garden_pause_motion`. While the timer is active, garden motion
-detection is off and Home Assistant sends one unconditional light-off command.
-When the timer finishes—or `script.garden_resume_motion` is run—the normal
-presence/time policy is reapplied automatically. From 21:00 to 05:00, Garden
-motion is always enabled regardless of whether anyone is home; during the day
-it remains enabled while the home is unoccupied.
+detection is off. When the timer finishes—or `script.garden_resume_motion` is
+run—the normal presence/time policy is reapplied automatically. From 21:00 to
+05:00, Garden motion is always enabled regardless of whether anyone is home;
+during the day it remains enabled while the home is unoccupied.
 
 The dashboard deliberately exposes the motion control rather than
-`light.garden_light`. Ring reports light commands optimistically, so that light
-entity can display Off even when the physical floodlight did not receive the
-command. Each motion-policy transition sends an unconditional off command to
-clear a latched/manual light state before Ring motion control resumes.
+automating `light.garden_light`. Ring reports light commands optimistically, so
+that light entity can display a state that does not match the physical
+floodlight. Home Assistant therefore leaves all light activation and shutoff
+behavior to the Ring device.
 
 ## Heating modes
 

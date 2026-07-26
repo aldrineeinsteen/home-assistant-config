@@ -21,15 +21,6 @@ timer:
     icon: mdi:motion-sensor-off
 
 script:
-  garden_force_light_off:
-    alias: Garden - Force Light Off
-    icon: mdi:lightbulb-off
-    mode: restart
-    sequence:
-      - action: light.turn_off
-        target:
-          entity_id: light.garden_light
-
   garden_apply_motion_policy:
     alias: Garden - Apply Motion Policy
     icon: mdi:motion-sensor
@@ -64,9 +55,6 @@ script:
               - condition: template
                 value_template: "{{ motion_should_be_enabled }}"
             sequence:
-              # Clear any latched/manual light state before handing control back
-              # to the Ring motion detector.
-              - action: script.garden_force_light_off
               - action: switch.turn_on
                 target:
                   entity_id: switch.garden_motion_detection
@@ -74,7 +62,6 @@ script:
           - action: switch.turn_off
             target:
               entity_id: switch.garden_motion_detection
-          - action: script.garden_force_light_off
 
   garden_pause_motion:
     alias: Garden - Pause Motion
