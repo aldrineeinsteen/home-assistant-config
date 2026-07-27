@@ -29,12 +29,12 @@ mqtt:
       expire_after: 180
 
   sensor:
-    - name: "Jellyfin Container Health"
-      unique_id: jellyfin_container_health
-      icon: mdi:docker
-      state_topic: "home/infrastructure/docker/jellyfin/status"
+    - name: "Jellyfin Runtime Health"
+      unique_id: jellyfin_runtime_health
+      icon: mdi:server
+      state_topic: "home/infrastructure/systemd/jellyfin/status"
       value_template: >
-        {{ value_json.container_health | default('unknown', true) }}
+        {{ value_json.service_health | default('unknown', true) }}
       expire_after: 180
 
     - name: "Pi-hole Container Health"
@@ -120,22 +120,27 @@ template:
         state: >
           {% set host = states('binary_sensor.jellyfin_raspberry_pi') %}
           {% set version = states('sensor.jellyfin_version') %}
+          {% set runtime = states('sensor.jellyfin_runtime_health') %}
           {% set configured =
             state_attr('sensor.jellyfin_version', 'StartupWizardCompleted')
           %}
-          {% if host != 'on' or version in ['unknown', 'unavailable'] %}
+          {% if host != 'on'
+                or version in ['unknown', 'unavailable']
+                or runtime in ['unknown', 'unavailable', 'none', ''] %}
             Unavailable
+          {% elif runtime != 'healthy' %}
+            Runtime problem
           {% elif configured is not true %}
             Configuration problem
           {% else %}
             Healthy
           {% endif %}
 
-      - name: "Jellyfin Docker Health"
-        unique_id: jellyfin_docker_health
-        icon: mdi:docker
+      - name: "Jellyfin Runtime"
+        unique_id: jellyfin_runtime
+        icon: mdi:server
         state: >
-          {% set health = states('sensor.jellyfin_container_health') %}
+          {% set health = states('sensor.jellyfin_runtime_health') %}
           {% if health in ['unknown', 'unavailable', 'none', ''] %}
             Telemetry unavailable
           {% else %}

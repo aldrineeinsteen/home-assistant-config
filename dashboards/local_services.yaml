@@ -65,8 +65,8 @@ views:
             entities:
               - entity: sensor.jellyfin_health
                 name: Service Health
-              - entity: sensor.jellyfin_docker_health
-                name: Docker Health
+              - entity: sensor.jellyfin_runtime
+                name: Runtime Health
               - entity: binary_sensor.jellyfin_raspberry_pi
                 name: Host Reachable
               - entity: sensor.jellyfin_version
