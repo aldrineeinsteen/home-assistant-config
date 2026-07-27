@@ -123,7 +123,45 @@ views:
             - entity: switch.smart_plug_mini_3
               name: Christmas Lights C
       - type: entities
+        show_header_toggle: false
+        state_color: true
         entities:
+          - entity: sensor.omv_storage_health
+            name: Storage Health
+          - entity: sensor.omv_filesystem_md0
+            name: Data Used
+          - entity: sensor.omv_data_available
+            name: Data Available
+          - type: attribute
+            entity: sensor.omv_filesystem_md0
+            attribute: mounted
+            name: Filesystem Mounted
+            icon: mdi:harddisk
+          - type: attribute
+            entity: sensor.omv_filesystem_md0
+            attribute: _readonly
+            name: Filesystem Read-only
+            icon: mdi:lock-outline
+          - type: section
+            label: Disk Temperatures
+          - entity: sensor.omv_disk_sda
+            name: Disk sda
+          - entity: sensor.omv_disk_sdb
+            name: Disk sdb
+          - entity: sensor.omv_disk_sdc
+            name: Disk sdc
+          - entity: sensor.omv_disk_sdd
+            name: Disk sdd
+          - entity: sensor.omv_disk_sde
+            name: Disk sde
+          - type: section
+            label: System Status
+          - entity: binary_sensor.omv_system_update_available
+            name: Package Updates Available
+          - entity: binary_sensor.omv_system_reboot_pending
+            name: Reboot Pending
+          - entity: binary_sensor.omv_system_config_dirty
+            name: Configuration Dirty
           - entity: update.openmediavault_update
-            name: Update
+            name: Integration Update
         title: OpenMediaVault
