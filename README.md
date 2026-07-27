@@ -110,30 +110,33 @@ for Chris room frost protection, and 0.3°C for demand hysteresis.
 
 ## Garden motion lighting
 
-Ring owns the garden camera's motion-activated light behavior. No repository
-automation or script calls `light.garden_light` in either direction. The Ring
-Motion Mode Manager controls camera motion detection according to presence and
-time, while
-`timer.garden_motion_pause` temporarily overrides that policy.
+Ring's native Motion-Activated Lights setting must remain off so Home Assistant
+can own the garden floodlight behavior. The Ring Motion Mode Manager enables
+camera motion detection from 21:00 to 05:00, while
+`timer.garden_motion_pause` temporarily overrides that policy. Presence does
+not affect the Garden night schedule.
 
 `input_boolean.garden_automation_enabled` is the dashboard master control.
 Turning it off suspends the Garden time/presence policy and pause controls,
-cancels any attempt to re-enable Garden motion, and sends a motion-off command.
-Turning it on reapplies the normal policy immediately.
+cancels any attempt to re-enable Garden motion, and sends motion-off and
+light-off commands. Turning it on reapplies the normal policy immediately.
 
 Select 30, 60, or 120 minutes with
 `input_select.garden_motion_pause_duration`, then run
 `script.garden_pause_motion`. While the timer is active, garden motion
-detection is off. When the timer finishes—or `script.garden_resume_motion` is
-run—the normal presence/time policy is reapplied automatically. From 21:00 to
-05:00, Garden motion is always enabled regardless of whether anyone is home;
-during the day it remains enabled while the home is unoccupied.
+detection and the floodlight are off. When the timer finishes—or
+`script.garden_resume_motion` is run—the normal time policy is reapplied
+automatically.
 
-The dashboard deliberately exposes the motion control rather than
-automating `light.garden_light`. Ring reports light commands optimistically, so
-that light entity can display a state that does not match the physical
-floodlight. Home Assistant therefore leaves all light activation and shutoff
-behavior to the Ring device.
+`automation.garden_motion_light` listens to `event.garden_motion` between
+21:00 and 05:00. Each motion event turns `light.garden_light` on for two
+minutes; additional motion restarts the two-minute delay. At 05:00, when a
+pause starts, or when the master control is turned off, Home Assistant sends
+motion-off and light-off commands.
+
+Ring communication is cloud-based. Motion events use Ring's real-time event
+service, while light commands and state updates can be delayed or fail when
+the camera's network connection is poor.
 
 ## Heating modes
 

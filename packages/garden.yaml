@@ -30,7 +30,6 @@ script:
           automation_enabled: >-
             {{ is_state('input_boolean.garden_automation_enabled', 'on') }}
           pause_state: "{{ states('timer.garden_motion_pause') }}"
-          anyone_home: "{{ is_state('binary_sensor.anyone_home', 'on') }}"
           is_daytime: >
             {{
               now().strftime('%H:%M:%S') >= '05:00:00'
@@ -40,7 +39,7 @@ script:
             {{
               automation_enabled
               and pause_state == 'idle'
-              and (not anyone_home or not is_daytime)
+              and not is_daytime
             }}
       - if:
           - condition: template
@@ -55,6 +54,9 @@ script:
               - condition: template
                 value_template: "{{ motion_should_be_enabled }}"
             sequence:
+              - action: light.turn_off
+                target:
+                  entity_id: light.garden_light
               - action: switch.turn_on
                 target:
                   entity_id: switch.garden_motion_detection
@@ -62,6 +64,9 @@ script:
           - action: switch.turn_off
             target:
               entity_id: switch.garden_motion_detection
+          - action: light.turn_off
+            target:
+              entity_id: light.garden_light
 
   garden_pause_motion:
     alias: Garden - Pause Motion
@@ -100,6 +105,43 @@ script:
       - action: script.garden_apply_motion_policy
 
 automation:
+  - alias: Garden - Motion Light
+    id: garden_motion_light
+    description: >
+      Turn the Garden floodlight on for two minutes when Ring reports motion
+      between 21:00 and 05:00. Further motion restarts the two-minute delay.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: event.garden_motion
+    condition:
+      - condition: template
+        value_template: >
+          {{
+            as_timestamp(trigger.to_state.state, 0)
+            >= as_timestamp(now()) - 30
+          }}
+      - condition: state
+        entity_id: input_boolean.garden_automation_enabled
+        state: "on"
+      - condition: state
+        entity_id: timer.garden_motion_pause
+        state: "idle"
+      - condition: template
+        value_template: >
+          {{
+            now().strftime('%H:%M:%S') >= '21:00:00'
+            or now().strftime('%H:%M:%S') < '05:00:00'
+          }}
+    action:
+      - action: light.turn_on
+        target:
+          entity_id: light.garden_light
+      - delay: "00:02:00"
+      - action: light.turn_off
+        target:
+          entity_id: light.garden_light
+
   - alias: Garden - Reapply Motion Policy
     id: garden_reapply_motion_policy
     description: >
