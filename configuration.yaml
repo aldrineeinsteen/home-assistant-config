@@ -31,6 +31,13 @@ lovelace:
       icon: mdi:test-tube
       show_in_sidebar: false
       require_admin: true
+    repo-local-services:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/local_services.yaml
+      title: Local Services
+      icon: mdi:server-network
+      show_in_sidebar: true
+      require_admin: true
     repo-energy:
       mode: yaml
       filename: repos/home-assistant-config/dashboards/energy.yaml

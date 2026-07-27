@@ -29,6 +29,22 @@ mqtt:
       expire_after: 180
 
   sensor:
+    - name: "Jellyfin Container Health"
+      unique_id: jellyfin_container_health
+      icon: mdi:docker
+      state_topic: "home/infrastructure/docker/jellyfin/status"
+      value_template: >
+        {{ value_json.container_health | default('unknown', true) }}
+      expire_after: 180
+
+    - name: "Pi-hole Container Health"
+      unique_id: pi_hole_container_health
+      icon: mdi:docker
+      state_topic: "home/infrastructure/docker/pi_hole/status"
+      value_template: >
+        {{ value_json.container_health | default('unknown', true) }}
+      expire_after: 180
+
     - name: "WireGuard Container Health"
       unique_id: wireguard_container_health
       icon: mdi:docker
@@ -115,14 +131,15 @@ template:
             Healthy
           {% endif %}
 
-      - name: "Jellyfin Pi Health"
-        unique_id: jellyfin_pi_health
-        icon: mdi:raspberry-pi
+      - name: "Jellyfin Docker Health"
+        unique_id: jellyfin_docker_health
+        icon: mdi:docker
         state: >
-          {% if states('binary_sensor.jellyfin_raspberry_pi') == 'on' %}
-            Reachable
+          {% set health = states('sensor.jellyfin_container_health') %}
+          {% if health in ['unknown', 'unavailable', 'none', ''] %}
+            Telemetry unavailable
           {% else %}
-            Unavailable
+            {{ health | replace('_', ' ') | title }}
           {% endif %}
 
       - name: "Pi-hole Health"
@@ -151,14 +168,15 @@ template:
             Healthy
           {% endif %}
 
-      - name: "Network Services Pi Health"
-        unique_id: network_services_pi_health
-        icon: mdi:raspberry-pi
+      - name: "Pi-hole Docker Health"
+        unique_id: pi_hole_docker_health
+        icon: mdi:docker
         state: >
-          {% if states('binary_sensor.network_services_raspberry_pi') == 'on' %}
-            Reachable
+          {% set health = states('sensor.pi_hole_container_health') %}
+          {% if health in ['unknown', 'unavailable', 'none', ''] %}
+            Telemetry unavailable
           {% else %}
-            Unavailable
+            {{ health | replace('_', ' ') | title }}
           {% endif %}
 
       - name: "WireGuard Health"
@@ -188,6 +206,100 @@ template:
           {% endif %}
         attributes:
           telemetry_expiry: "180 seconds"
+
+      - name: "WireGuard Docker Health"
+        unique_id: wireguard_docker_health
+        icon: mdi:docker
+        state: >
+          {% set running =
+            states('binary_sensor.wireguard_container_running')
+          %}
+          {% set health = states('sensor.wireguard_container_health') %}
+          {% if running in ['unknown', 'unavailable'] %}
+            Telemetry unavailable
+          {% elif running != 'on' %}
+            Stopped
+          {% elif health in ['unknown', 'unavailable', 'none', ''] %}
+            Running
+          {% else %}
+            {{ health | replace('_', ' ') | title }}
+          {% endif %}
+
+      - name: "WireGuard Interface Status"
+        unique_id: wireguard_interface_status
+        icon: mdi:vpn
+        state: >
+          {% set interface = states('sensor.wireguard_interface') %}
+          {% if interface in ['unknown', 'unavailable', 'none', ''] %}
+            Telemetry unavailable
+          {% else %}
+            {{ interface | replace('_', ' ') | title }}
+          {% endif %}
+
+      - name: "WireGuard Peer Status"
+        unique_id: wireguard_peer_status
+        icon: mdi:account-network
+        state: >
+          {% set peers = states('sensor.wireguard_peers') %}
+          {% if peers in ['unknown', 'unavailable', 'none', ''] %}
+            Telemetry unavailable
+          {% else %}
+            {{ peers }}
+          {% endif %}
+
+      - name: "WireGuard Handshake Status"
+        unique_id: wireguard_handshake_status
+        icon: mdi:handshake
+        state: >
+          {% set age = states('sensor.wireguard_latest_handshake_age') %}
+          {% if age in ['unknown', 'unavailable', 'none', ''] %}
+            Telemetry unavailable
+          {% elif age | int(-1) < 0 %}
+            No handshake
+          {% else %}
+            {{ age | int }} seconds ago
+          {% endif %}
+
+      - name: "WireGuard Traffic"
+        unique_id: wireguard_traffic
+        icon: mdi:swap-vertical
+        state: >
+          {% set received = states('sensor.wireguard_received') %}
+          {% set sent = states('sensor.wireguard_sent') %}
+          {% if
+            received in ['unknown', 'unavailable', 'none', '']
+            or sent in ['unknown', 'unavailable', 'none', '']
+          %}
+            Telemetry unavailable
+          {% else %}
+            Available
+          {% endif %}
+        attributes:
+          received: >
+            {% set value = states('sensor.wireguard_received') %}
+            {% if value in ['unknown', 'unavailable', 'none', ''] %}
+              Telemetry unavailable
+            {% else %}
+              {{ value | int | filesizeformat }}
+            {% endif %}
+          sent: >
+            {% set value = states('sensor.wireguard_sent') %}
+            {% if value in ['unknown', 'unavailable', 'none', ''] %}
+              Telemetry unavailable
+            {% else %}
+              {{ value | int | filesizeformat }}
+            {% endif %}
+
+      - name: "WireGuard Telemetry Status"
+        unique_id: wireguard_telemetry_status
+        icon: mdi:clock-check-outline
+        state: >
+          {% set updated = states('sensor.wireguard_telemetry_updated') %}
+          {% if updated in ['unknown', 'unavailable', 'none', ''] %}
+            Telemetry unavailable
+          {% else %}
+            {{ updated }}
+          {% endif %}
 
       - name: "ASUS Router Health"
         unique_id: asus_router_health

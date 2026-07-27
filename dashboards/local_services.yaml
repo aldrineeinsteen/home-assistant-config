@@ -1,0 +1,154 @@
+views:
+  - title: Local Services
+    path: services
+    icon: mdi:server-network
+    theme: Backend-selected
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: heading
+            heading: Storage Services
+            icon: mdi:nas
+          - type: entities
+            title: OpenMediaVault
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.omv_storage_health
+                name: Storage Health
+              - entity: sensor.omv_filesystem_md0
+                name: Data Used
+              - entity: sensor.omv_data_available
+                name: Data Available
+              - type: attribute
+                entity: sensor.omv_filesystem_md0
+                attribute: mounted
+                name: Filesystem Mounted
+                icon: mdi:harddisk
+              - type: attribute
+                entity: sensor.omv_filesystem_md0
+                attribute: _readonly
+                name: Filesystem Read-only
+                icon: mdi:lock-outline
+              - type: section
+                label: Disk Temperatures
+              - entity: sensor.omv_disk_sda
+                name: Disk sda
+              - entity: sensor.omv_disk_sdb
+                name: Disk sdb
+              - entity: sensor.omv_disk_sdc
+                name: Disk sdc
+              - entity: sensor.omv_disk_sdd
+                name: Disk sdd
+              - entity: sensor.omv_disk_sde
+                name: Disk sde
+              - type: section
+                label: System Status
+              - entity: binary_sensor.omv_system_update_available
+                name: Package Updates Available
+              - entity: binary_sensor.omv_system_reboot_pending
+                name: Reboot Pending
+              - entity: binary_sensor.omv_system_config_dirty
+                name: Configuration Dirty
+              - entity: update.openmediavault_update
+                name: Integration Update
+
+      - type: vertical-stack
+        cards:
+          - type: heading
+            heading: Media Services
+            icon: mdi:play-network
+          - type: entities
+            title: Jellyfin
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.jellyfin_health
+                name: Service Health
+              - entity: sensor.jellyfin_docker_health
+                name: Docker Health
+              - entity: binary_sensor.jellyfin_raspberry_pi
+                name: Host Reachable
+              - entity: sensor.jellyfin_version
+                name: Version
+              - type: attribute
+                entity: sensor.jellyfin_version
+                attribute: ServerName
+                name: Server
+                icon: mdi:server
+              - type: attribute
+                entity: sensor.jellyfin_version
+                attribute: LocalAddress
+                name: Backend
+                icon: mdi:ip-network
+
+      - type: vertical-stack
+        cards:
+          - type: heading
+            heading: Network Services
+            icon: mdi:lan
+          - type: entities
+            title: Pi-hole
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.pi_hole_health
+                name: Service Health
+              - entity: sensor.pi_hole_docker_health
+                name: Docker Health
+              - entity: binary_sensor.network_services_raspberry_pi
+                name: Host Reachable
+              - entity: switch.pi_hole
+                name: DNS Filtering
+              - entity: sensor.pi_hole_dns_queries
+                name: DNS Queries
+              - entity: sensor.pi_hole_ads_percentage_blocked
+                name: Blocked
+              - entity: sensor.pi_hole_dns_unique_clients
+                name: Unique Clients
+              - type: section
+                label: Updates
+              - entity: update.pi_hole_core_update_available
+                name: Pi-hole Core
+              - entity: update.pi_hole_ftl_update_available
+                name: FTL
+              - entity: update.pi_hole_web_update_available
+                name: Web Interface
+          - type: entities
+            title: WireGuard
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.wireguard_health
+                name: Service Health
+              - entity: sensor.wireguard_docker_health
+                name: Docker Health
+              - entity: binary_sensor.network_services_raspberry_pi
+                name: Host Reachable
+              - entity: sensor.wireguard_interface_status
+                name: Interface
+              - entity: sensor.wireguard_peer_status
+                name: Peers
+              - entity: sensor.wireguard_handshake_status
+                name: Latest Handshake
+              - type: attribute
+                entity: sensor.wireguard_traffic
+                attribute: received
+                name: Received
+                icon: mdi:download-network
+              - type: attribute
+                entity: sensor.wireguard_traffic
+                attribute: sent
+                name: Sent
+                icon: mdi:upload-network
+              - entity: sensor.wireguard_telemetry_status
+                name: Telemetry Updated
+          - type: entities
+            title: ASUS GT-BE98 Router
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.asus_router_health
+                name: Router Health
+              - entity: binary_sensor.asus_gt_be98_router
+                name: Router Reachable
