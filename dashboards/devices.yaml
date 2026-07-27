@@ -122,6 +122,9 @@ views:
           entities:
             - entity: switch.smart_plug_mini_3
               name: Christmas Lights C
+      - type: heading
+        heading: Infrastructure and Services
+        icon: mdi:server-network
       - type: entities
         show_header_toggle: false
         state_color: true
@@ -165,3 +168,83 @@ views:
           - entity: update.openmediavault_update
             name: Integration Update
         title: OpenMediaVault
+      - type: entities
+        show_header_toggle: false
+        state_color: true
+        entities:
+          - entity: sensor.jellyfin_health
+            name: Service Health
+          - entity: sensor.jellyfin_pi_health
+            name: Raspberry Pi Health
+          - entity: binary_sensor.jellyfin_raspberry_pi
+            name: Host Reachable
+          - entity: sensor.jellyfin_version
+            name: Version
+          - type: attribute
+            entity: sensor.jellyfin_version
+            attribute: ServerName
+            name: Server
+            icon: mdi:server
+          - type: attribute
+            entity: sensor.jellyfin_version
+            attribute: LocalAddress
+            name: Backend
+            icon: mdi:ip-network
+        title: Jellyfin
+      - type: entities
+        show_header_toggle: false
+        state_color: true
+        entities:
+          - entity: sensor.pi_hole_health
+            name: Service Health
+          - entity: sensor.network_services_pi_health
+            name: Raspberry Pi Health
+          - entity: switch.pi_hole
+            name: DNS Filtering
+          - entity: sensor.pi_hole_dns_queries
+            name: DNS Queries
+          - entity: sensor.pi_hole_ads_percentage_blocked
+            name: Blocked
+          - entity: sensor.pi_hole_dns_unique_clients
+            name: Unique Clients
+          - type: section
+            label: Updates
+          - entity: update.pi_hole_core_update_available
+            name: Pi-hole Core
+          - entity: update.pi_hole_ftl_update_available
+            name: FTL
+          - entity: update.pi_hole_web_update_available
+            name: Web Interface
+        title: Pi-hole
+      - type: entities
+        show_header_toggle: false
+        state_color: true
+        entities:
+          - entity: sensor.wireguard_health
+            name: Service Health
+          - entity: sensor.network_services_pi_health
+            name: Raspberry Pi Health
+          - entity: binary_sensor.wireguard_container_running
+            name: Container
+          - entity: sensor.wireguard_interface
+            name: Interface
+          - entity: sensor.wireguard_peers
+            name: Peers
+          - entity: sensor.wireguard_latest_handshake_age
+            name: Latest Handshake Age
+          - entity: sensor.wireguard_received
+            name: Received
+          - entity: sensor.wireguard_sent
+            name: Sent
+          - entity: sensor.wireguard_telemetry_updated
+            name: Telemetry Updated
+        title: WireGuard
+      - type: entities
+        show_header_toggle: false
+        state_color: true
+        entities:
+          - entity: sensor.asus_router_health
+            name: Router Health
+          - entity: binary_sensor.asus_gt_be98_router
+            name: Router Reachable
+        title: ASUS GT-BE98 Router

@@ -1,0 +1,191 @@
+rest:
+  - resource: https://jellyfin.lan/System/Info/Public
+    method: GET
+    verify_ssl: false
+    timeout: 10
+    scan_interval: 60
+    sensor:
+      - name: "Jellyfin Version"
+        unique_id: jellyfin_version
+        icon: mdi:jellyfish
+        value_template: >
+          {{ value_json.Version | default('unknown', true) }}
+        json_attributes:
+          - ServerName
+          - ProductName
+          - LocalAddress
+          - StartupWizardCompleted
+
+mqtt:
+  binary_sensor:
+    - name: "WireGuard Container Running"
+      unique_id: wireguard_container_running
+      device_class: running
+      state_topic: "home/infrastructure/wireguard/status"
+      value_template: >
+        {{ 'ON' if value_json.container_running | default(false) else 'OFF' }}
+      payload_on: "ON"
+      payload_off: "OFF"
+      expire_after: 180
+
+  sensor:
+    - name: "WireGuard Interface"
+      unique_id: wireguard_interface
+      icon: mdi:vpn
+      state_topic: "home/infrastructure/wireguard/status"
+      value_template: >
+        {{ value_json.interface_state | default('unknown', true) }}
+      expire_after: 180
+
+    - name: "WireGuard Peers"
+      unique_id: wireguard_peers
+      icon: mdi:account-network
+      state_topic: "home/infrastructure/wireguard/status"
+      value_template: >
+        {{ value_json.peer_count | int(0) }}
+      state_class: measurement
+      expire_after: 180
+
+    - name: "WireGuard Latest Handshake Age"
+      unique_id: wireguard_latest_handshake_age
+      icon: mdi:handshake
+      state_topic: "home/infrastructure/wireguard/status"
+      value_template: >
+        {{ value_json.latest_handshake_age | int(0) }}
+      device_class: duration
+      unit_of_measurement: "s"
+      state_class: measurement
+      expire_after: 180
+
+    - name: "WireGuard Received"
+      unique_id: wireguard_received
+      icon: mdi:download-network
+      state_topic: "home/infrastructure/wireguard/status"
+      value_template: >
+        {{ value_json.received_bytes | int(0) }}
+      device_class: data_size
+      unit_of_measurement: "B"
+      state_class: total_increasing
+      expire_after: 180
+
+    - name: "WireGuard Sent"
+      unique_id: wireguard_sent
+      icon: mdi:upload-network
+      state_topic: "home/infrastructure/wireguard/status"
+      value_template: >
+        {{ value_json.sent_bytes | int(0) }}
+      device_class: data_size
+      unit_of_measurement: "B"
+      state_class: total_increasing
+      expire_after: 180
+
+    - name: "WireGuard Telemetry Updated"
+      unique_id: wireguard_telemetry_updated
+      icon: mdi:clock-check-outline
+      state_topic: "home/infrastructure/wireguard/status"
+      value_template: >
+        {{ value_json.updated_at | default('unknown', true) }}
+      device_class: timestamp
+      expire_after: 180
+
+template:
+  - sensor:
+      - name: "Jellyfin Health"
+        unique_id: jellyfin_health
+        icon: mdi:jellyfish
+        state: >
+          {% set host = states('binary_sensor.jellyfin_raspberry_pi') %}
+          {% set version = states('sensor.jellyfin_version') %}
+          {% set configured =
+            state_attr('sensor.jellyfin_version', 'StartupWizardCompleted')
+          %}
+          {% if host != 'on' or version in ['unknown', 'unavailable'] %}
+            Unavailable
+          {% elif configured is not true %}
+            Configuration problem
+          {% else %}
+            Healthy
+          {% endif %}
+
+      - name: "Jellyfin Pi Health"
+        unique_id: jellyfin_pi_health
+        icon: mdi:raspberry-pi
+        state: >
+          {% if states('binary_sensor.jellyfin_raspberry_pi') == 'on' %}
+            Reachable
+          {% else %}
+            Unavailable
+          {% endif %}
+
+      - name: "Pi-hole Health"
+        unique_id: pi_hole_health
+        icon: mdi:pi-hole
+        state: >
+          {% set host = states('binary_sensor.network_services_raspberry_pi') %}
+          {% set service = states('binary_sensor.pi_hole_status') %}
+          {% set filtering = states('switch.pi_hole') %}
+          {% set updates = [
+            states('update.pi_hole_core_update_available'),
+            states('update.pi_hole_ftl_update_available'),
+            states('update.pi_hole_web_update_available')
+          ] %}
+          {% if
+            host != 'on'
+            or service in ['unknown', 'unavailable']
+            or filtering in ['unknown', 'unavailable']
+          %}
+            Unavailable
+          {% elif service != 'on' or filtering != 'on' %}
+            Filtering disabled
+          {% elif 'on' in updates %}
+            Update available
+          {% else %}
+            Healthy
+          {% endif %}
+
+      - name: "Network Services Pi Health"
+        unique_id: network_services_pi_health
+        icon: mdi:raspberry-pi
+        state: >
+          {% if states('binary_sensor.network_services_raspberry_pi') == 'on' %}
+            Reachable
+          {% else %}
+            Unavailable
+          {% endif %}
+
+      - name: "WireGuard Health"
+        unique_id: wireguard_health
+        icon: mdi:vpn
+        state: >
+          {% set host = states('binary_sensor.network_services_raspberry_pi') %}
+          {% set container =
+            states('binary_sensor.wireguard_container_running')
+          %}
+          {% set interface = states('sensor.wireguard_interface') %}
+          {% if host != 'on' %}
+            Unavailable
+          {% elif container in ['unknown', 'unavailable'] %}
+            Telemetry unavailable
+          {% elif container != 'on' %}
+            Container stopped
+          {% elif interface != 'up' %}
+            Interface problem
+          {% else %}
+            Healthy
+          {% endif %}
+        attributes:
+          telemetry_expiry: "180 seconds"
+
+      - name: "ASUS Router Health"
+        unique_id: asus_router_health
+        icon: mdi:router-wireless
+        state: >
+          {% set host = states('binary_sensor.asus_gt_be98_router') %}
+          {% if host == 'on' %}
+            Reachable
+          {% else %}
+            Unavailable
+          {% endif %}
+        attributes:
+          address: "192.168.100.1"
+          model: "GT-BE98"
