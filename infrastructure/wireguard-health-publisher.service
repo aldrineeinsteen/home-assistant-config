@@ -1,0 +1,15 @@
+[Unit]
+Description=Publish WireGuard health to Home Assistant MQTT
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/wireguard-health-publisher.env
+ExecStart=/usr/local/sbin/wireguard-health-publisher
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

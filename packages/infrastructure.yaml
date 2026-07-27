@@ -29,6 +29,14 @@ mqtt:
       expire_after: 180
 
   sensor:
+    - name: "WireGuard Container Health"
+      unique_id: wireguard_container_health
+      icon: mdi:docker
+      state_topic: "home/infrastructure/wireguard/status"
+      value_template: >
+        {{ value_json.container_health | default('unknown', true) }}
+      expire_after: 180
+
     - name: "WireGuard Interface"
       unique_id: wireguard_interface
       icon: mdi:vpn
@@ -161,6 +169,9 @@ template:
           {% set container =
             states('binary_sensor.wireguard_container_running')
           %}
+          {% set container_health =
+            states('sensor.wireguard_container_health')
+          %}
           {% set interface = states('sensor.wireguard_interface') %}
           {% if host != 'on' %}
             Unavailable
@@ -168,6 +179,8 @@ template:
             Telemetry unavailable
           {% elif container != 'on' %}
             Container stopped
+          {% elif container_health not in ['healthy', 'running'] %}
+            Container unhealthy
           {% elif interface != 'up' %}
             Interface problem
           {% else %}
