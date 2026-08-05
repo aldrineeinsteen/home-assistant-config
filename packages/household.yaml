@@ -134,14 +134,40 @@ template:
         device_class: temperature
         state_class: measurement
         availability: >
+          {% set temps = [
+            state_attr('climate.radiator_valve_1_5', 'current_temperature'),
+            state_attr('climate.hive_control', 'current_temperature'),
+            state_attr('climate.dining_room_1', 'current_temperature')
+          ] %}
+          {{ temps | select('number') | list | count > 0 }}
+        state: >
+          {% set temps = [
+            state_attr('climate.radiator_valve_1_5', 'current_temperature'),
+            state_attr('climate.hive_control', 'current_temperature'),
+            state_attr('climate.dining_room_1', 'current_temperature')
+          ] %}
+          {% set valid = temps | select('number') | list %}
+          {% if valid | count > 0 %}
+            {{ (valid | sum / valid | count) | round(1) }}
+          {% else %}
+            {{ none }}
+          {% endif %}
+
+      - name: Second Floor Avg Temperature
+        unique_id: second_floor_avg_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        # Keona's two bedroom TRVs will be added here once they are deployed.
+        availability: >
           {{
             is_number(
-              states('sensor.radiator_valve_1_current_temperature_5')
+              state_attr('climate.chris_bedroom_1', 'current_temperature')
             )
           }}
         state: >
           {% set temperature =
-            states('sensor.radiator_valve_1_current_temperature_5') %}
+            state_attr('climate.chris_bedroom_1', 'current_temperature') %}
           {{
             temperature | float | round(1)
             if is_number(temperature)

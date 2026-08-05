@@ -65,9 +65,12 @@ views:
         cards:
           - type: heading
             heading: Ground Floor
-          - type: thermostat
-            entity: climate.radiator_valve_1_5
-            name: Ground Floor TRV
+          - type: history-graph
+            title: Mean Temperature (Utility, Hive, Dining)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.ground_floor_avg_temperature
+                name: Mean temperature
           - type: tile
             entity: sensor.ground_floor_avg_temperature
             name: Ground Floor Current
@@ -78,38 +81,34 @@ views:
         cards:
           - type: heading
             heading: First Floor
-          - type: tile
-            entity: input_number.heating_target_first_floor
-            name: First Floor Target
-          - type: tile
-            entity: sensor.first_floor_avg_temperature
-            name: First Floor Current
-      - type: grid
-        cards:
-          - type: heading
-            heading: Kids Room - Chris
-          - type: thermostat
-            entity: climate.chris_bedroom_1
-            name: Chris Room TRV
-          - type: tile
-            entity: sensor.chris_bedroom_current_temperature
-            name: Chris Room Current
-          - type: tile
-            entity: input_number.heating_target_chris_room
-            name: Chris Room Target
-      - type: grid
-        cards:
-          - type: heading
-            heading: Master Bedroom
           - type: history-graph
-            title: Mean Temperature (3 TRVs)
+            title: Mean Temperature (Master Bedroom 1–3)
             hours_to_show: 24
             entities:
               - entity: sensor.first_floor_avg_temperature
                 name: Mean temperature
           - type: tile
+            entity: sensor.first_floor_avg_temperature
+            name: First Floor Current
+          - type: tile
             entity: input_number.heating_target_first_floor
-            name: Master Bedroom Target
+            name: First Floor Target
+      - type: grid
+        cards:
+          - type: heading
+            heading: Second Floor
+          - type: history-graph
+            title: Mean Temperature (Chris Room)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.second_floor_avg_temperature
+                name: Mean temperature
+          - type: tile
+            entity: sensor.second_floor_avg_temperature
+            name: Second Floor Current
+          - type: tile
+            entity: input_number.heating_target_chris_room
+            name: Chris Room Target
       - type: grid
         cards:
           - type: heading
