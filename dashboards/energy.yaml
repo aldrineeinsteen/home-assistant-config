@@ -85,8 +85,6 @@ views:
             name: Octoplus Points
           - entity: calendar.octopus_energy_a_92e14e0f_octoplus_power_down
             name: Power Down Session
-          - entity: calendar.octopus_energy_a_92e14e0f_greener_nights
-            name: Greener Nights
           - entity: >-
               sensor.octopus_energy_a_92e14e0f_wheel_of_fortune_spins_electricity
             name: Wheel Spins Electricity
