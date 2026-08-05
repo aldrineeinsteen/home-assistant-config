@@ -42,6 +42,10 @@ template:
             state_attr(
               'climate.radiator_valve_1_master_bedroom_3',
               'current_temperature'
+            ),
+            state_attr(
+              'climate.master_bedroom_1',
+              'current_temperature'
             )
           ] %}
           {{ temps | select('number') | list | count > 0 }}
@@ -53,6 +57,10 @@ template:
             ),
             state_attr(
               'climate.radiator_valve_1_master_bedroom_3',
+              'current_temperature'
+            ),
+            state_attr(
+              'climate.master_bedroom_1',
               'current_temperature'
             )
           ] %}

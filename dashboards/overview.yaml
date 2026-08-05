@@ -100,26 +100,13 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Master Bedroom - TRV 1
-          - type: thermostat
-            entity: climate.radiator_valve_1_2
-            name: Master Bedroom TRV 1
-          - type: tile
-            entity: sensor.radiator_valve_1_current_temperature_2
-            name: Master Bedroom Temp 1
-          - type: tile
-            entity: input_number.heating_target_first_floor
-            name: Master Bedroom Target
-      - type: grid
-        cards:
-          - type: heading
-            heading: Master Bedroom - TRV 2
-          - type: thermostat
-            entity: climate.radiator_valve_1_master_bedroom_3
-            name: Master Bedroom TRV 2
-          - type: tile
-            entity: sensor.radiator_valve_1_current_temperature
-            name: Master Bedroom Temp 2
+            heading: Master Bedroom
+          - type: history-graph
+            title: Mean Temperature (3 TRVs)
+            hours_to_show: 24
+            entities:
+              - entity: sensor.first_floor_avg_temperature
+                name: Mean temperature
           - type: tile
             entity: input_number.heating_target_first_floor
             name: Master Bedroom Target
