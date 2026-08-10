@@ -1,0 +1,114 @@
+# Hive hot-water policy is intentionally separate from space-heating policy.
+# Hive owns boost expiry; Home Assistant owns the weekly on/off schedule.
+
+schedule:
+  hot_water_weekly:
+    name: Hot Water Weekly Schedule
+    icon: mdi:calendar-clock
+    monday:
+      - from: "05:45:00"
+        to: "07:30:00"
+      - from: "17:30:00"
+        to: "18:15:00"
+    tuesday:
+      - from: "05:45:00"
+        to: "07:30:00"
+      - from: "17:30:00"
+        to: "18:15:00"
+    wednesday:
+      - from: "05:45:00"
+        to: "07:30:00"
+      - from: "17:30:00"
+        to: "18:15:00"
+    thursday:
+      - from: "05:45:00"
+        to: "07:30:00"
+      - from: "17:30:00"
+        to: "18:15:00"
+    friday:
+      - from: "05:45:00"
+        to: "07:30:00"
+      - from: "17:30:00"
+        to: "18:15:00"
+    saturday:
+      - from: "07:00:00"
+        to: "10:00:00"
+      - from: "17:30:00"
+        to: "18:15:00"
+    sunday:
+      - from: "07:00:00"
+        to: "10:00:00"
+      - from: "17:30:00"
+        to: "18:15:00"
+
+script:
+  hot_water_boost_30_minutes:
+    alias: Hot Water - Boost 30 Minutes
+    icon: mdi:water-plus
+    mode: single
+    sequence:
+      - action: hive.boost_hot_water
+        data:
+          entity_id: water_heater.hive_control
+          on_off: "on"
+          time_period: "00:30:00"
+
+  hot_water_boost_60_minutes:
+    alias: Hot Water - Boost 60 Minutes
+    icon: mdi:water-plus
+    mode: single
+    sequence:
+      - action: hive.boost_hot_water
+        data:
+          entity_id: water_heater.hive_control
+          on_off: "on"
+          time_period: "01:00:00"
+
+  hot_water_boost_120_minutes:
+    alias: Hot Water - Boost 120 Minutes
+    icon: mdi:water-plus
+    mode: single
+    sequence:
+      - action: hive.boost_hot_water
+        data:
+          entity_id: water_heater.hive_control
+          on_off: "on"
+          time_period: "02:00:00"
+
+  hot_water_cancel_boost:
+    alias: Hot Water - Cancel Boost
+    icon: mdi:water-off
+    mode: single
+    sequence:
+      - action: hive.boost_hot_water
+        data:
+          entity_id: water_heater.hive_control
+          on_off: "off"
+          time_period: "00:00:00"
+
+automation:
+  - alias: Hot Water - Apply Weekly Schedule
+    id: hot_water_apply_weekly_schedule
+    description: >
+      Keep Hive hot water on only during the configured weekday/weekend windows.
+      A Hive boost is separate and expires back to this policy.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: schedule.hot_water_weekly
+      - platform: homeassistant
+        event: start
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: schedule.hot_water_weekly
+                state: "on"
+            sequence:
+              - action: water_heater.turn_on
+                target:
+                  entity_id: water_heater.hive_control
+        default:
+          - action: water_heater.turn_off
+            target:
+              entity_id: water_heater.hive_control

@@ -138,6 +138,22 @@ Ring communication is cloud-based. Motion events use Ring's real-time event
 service, while light commands and state updates can be delayed or fail when
 the camera's network connection is poor.
 
+## Hot water
+
+`packages/hot_water.yaml` keeps Hive hot water separate from the space-heating
+policy. It uses the existing `water_heater.hive_control` entity and creates no
+new input helpers or timers.
+
+The weekly schedule is on from 05:45 to 07:30 on weekdays, 07:00 to 10:00 at
+weekends, and 17:30 to 18:15 every day. At every other time Home Assistant
+turns the water heater off. The schedule is also applied on Home Assistant
+startup, so a restart cannot leave hot water permanently on.
+
+The Overview dashboard offers 30-, 60-, and 120-minute Hive boosts plus a
+cancel action. Hive tracks the timed boost and returns to the current
+water-heater mode when it expires; the weekly schedule remains responsible for
+the normal on/off windows.
+
 ## Heating modes
 
 `sensor.heating_effective_mode` exposes the active mode, and
