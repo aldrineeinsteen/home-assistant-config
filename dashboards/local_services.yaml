@@ -17,11 +17,15 @@ views:
               - entity: sensor.hive_hub_health
                 name: Service Health
               - entity: binary_sensor.hive_hub_hive_hub_status
-                name: Hub Connected
+                name: Hive Cloud Connected
+              - entity: climate.hive_control
+                name: Physical Bridge Control
               - entity: binary_sensor.hive_control_available
-                name: Hive Controls Available
+                name: Physical Bridge Available
               - entity: switch.smart_plug_mini_4
                 name: Hub Power
+              - entity: sensor.smart_plug_mini_power_4
+                name: Hub Plug Load
               - entity: sensor.hive_restart_last_run_minutes
                 name: Minutes Since Last Restart
               - entity: automation.hive_hub_recover_when_unhealthy

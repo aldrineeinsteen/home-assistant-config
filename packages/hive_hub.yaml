@@ -6,16 +6,14 @@ template:
           {{
             states('climate.hive_control')
               not in ['unavailable', 'unknown']
-            and states('water_heater.hive_control')
-              not in ['unavailable', 'unknown']
           }}
 
       - name: "Hive Hub Healthy"
         unique_id: hive_hub_healthy
         device_class: connectivity
         state: >
-          {# The hub-status entity is supplied by the Hive integration for the
-             physical device named "hive-hub"; it is not a template proxy. #}
+          {# The cloud status comes from Hive. The climate entity is supplied
+             by the physical NANO3 bridge through HomeKit Controller. #}
           {{
             is_state('switch.smart_plug_mini_4', 'on')
             and is_state(
@@ -23,6 +21,8 @@ template:
               'on'
             )
             and is_state('binary_sensor.hive_control_available', 'on')
+            and states('water_heater.hive_control')
+              not in ['unavailable', 'unknown']
           }}
         attributes:
           hub_connected: >
@@ -42,6 +42,9 @@ template:
           {% elif states('switch.smart_plug_mini_4')
               in ['unavailable', 'unknown'] %}
             Unavailable
+          {% elif states('climate.hive_control')
+              in ['unavailable', 'unknown'] %}
+            Physical Bridge Offline
           {% elif is_state(
               'binary_sensor.hive_hub_hive_hub_status',
               'off'
@@ -127,8 +130,10 @@ script:
             error: true
       - wait_template: >
           {{
-            is_state('binary_sensor.hive_hub_hive_hub_status', 'on')
-            and is_state('binary_sensor.hive_control_available', 'on')
+            is_state('binary_sensor.hive_control_available', 'on')
+            and is_state('binary_sensor.hive_hub_hive_hub_status', 'on')
+            and states('water_heater.hive_control')
+              not in ['unavailable', 'unknown']
           }}
         timeout: "00:05:00"
         continue_on_timeout: true
@@ -141,6 +146,8 @@ script:
                   'on'
                 )
                 or not is_state('binary_sensor.hive_control_available', 'on')
+                or states('water_heater.hive_control')
+                  in ['unavailable', 'unknown']
               }}
         then:
           - action: persistent_notification.create
@@ -160,16 +167,21 @@ automation:
   - id: hive_hub_recover_when_unhealthy
     alias: "Hive Hub - Recover When Unhealthy"
     description: >
-      Restart the Hive Hub only after a sustained failure, with a cooldown to
-      prevent repeated plug cycles.
+      Restart the physical Hive Bridge only after its HomeKit-backed control
+      has been unavailable for a sustained period, with a cooldown to prevent
+      repeated plug cycles.
     mode: single
     variables:
       restart_cooldown_hours: 6
     trigger:
       - platform: state
-        # Integration-provided connectivity for the physical Hive Hub.
-        entity_id: binary_sensor.hive_hub_hive_hub_status
-        to: "off"
+        # This entity belongs to the physical Hive Bridge (IJA-603/NANO3).
+        entity_id: climate.hive_control
+        to: "unavailable"
+        for: "00:10:00"
+      - platform: state
+        entity_id: climate.hive_control
+        to: "unknown"
         for: "00:10:00"
     condition:
       - condition: state

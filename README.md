@@ -162,10 +162,13 @@ single health state shown on the Local Services dashboard. A sustained failure
 of ten minutes triggers a guarded power cycle, with a six-hour cooldown between
 attempts. The same restart script is available as a manual dashboard action.
 
-The recovery trigger is the Hive integration's own
-`binary_sensor.hive_hub_hive_hub_status`, registered to the physical
-`hive-hub` device. The repository's template health sensor only summarizes
-that raw status with power and control availability for display.
+The cloud status is Hive's own `binary_sensor.hive_hub_hive_hub_status`. The
+physical bridge is independently represented by `climate.hive_control`, which
+Home Assistant registers beneath the HomeKit Controller device
+`Hive Bridge (IJA-603)`, model `NANO3` by Hive. Recovery is triggered by that
+physical control becoming unavailable for ten minutes. The template health
+sensor summarizes physical availability, cloud status, plug power, and control
+availability for display; it is not the recovery trigger.
 
 There is no scheduled Hive Hub plug restart. If the plug is deliberately off,
 automatic recovery does not turn it back on.
