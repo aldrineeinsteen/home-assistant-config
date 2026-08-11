@@ -13,13 +13,13 @@ template:
       - name: "Outside Warm Enough For Heating Off"
         unique_id: outside_warm_enough_for_heating_off
         availability: >
-          {% set outside_temp = state_attr('weather.forecast_home', 'temperature') %}
+          {% set outside_temp = states('sensor.outside_temperature') %}
           {{
             is_number(outside_temp)
             and is_number(states('input_number.heating_outside_cutoff'))
           }}
         state: >
-          {% set outside_temp = state_attr('weather.forecast_home', 'temperature') %}
+          {% set outside_temp = states('sensor.outside_temperature') %}
           {{
             is_number(outside_temp)
             and is_number(states('input_number.heating_outside_cutoff'))
