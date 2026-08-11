@@ -166,7 +166,10 @@ The cloud status is Hive's own `binary_sensor.hive_hub_hive_hub_status`. The
 physical bridge is independently represented by `climate.hive_control`, which
 Home Assistant registers beneath the HomeKit Controller device
 `Hive Bridge (IJA-603)`, model `NANO3` by Hive. Recovery is triggered by that
-physical control becoming unavailable for ten minutes. The template health
+physical control becoming unavailable for ten minutes. Startup also begins a
+ten-minute observation window so a bridge that was already unavailable before
+Home Assistant loaded is handled. The bridge state, plug state, and cooldown
+are rechecked after that window before power can be cycled. The template health
 sensor summarizes physical availability, cloud status, plug power, and control
 availability for display; it is not the recovery trigger.
 

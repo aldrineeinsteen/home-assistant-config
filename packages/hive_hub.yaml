@@ -175,18 +175,35 @@ automation:
       restart_cooldown_hours: 6
     trigger:
       - platform: state
+        id: physical_bridge_unavailable
         # This entity belongs to the physical Hive Bridge (IJA-603/NANO3).
         entity_id: climate.hive_control
         to: "unavailable"
         for: "00:10:00"
       - platform: state
+        id: physical_bridge_unknown
         entity_id: climate.hive_control
         to: "unknown"
         for: "00:10:00"
-    condition:
+      - platform: homeassistant
+        id: startup_check
+        event: start
+    condition: []
+    action:
+      - if:
+          - condition: template
+            value_template: "{{ trigger.id == 'startup_check' }}"
+        then:
+          - delay: "00:10:00"
       - condition: state
         entity_id: switch.smart_plug_mini_4
         state: "on"
+      - condition: template
+        value_template: >
+          {{
+            states('climate.hive_control')
+              in ['unavailable', 'unknown']
+          }}
       - condition: template
         value_template: >
           {% set last = state_attr('script.hive_hub_restart', 'last_triggered') %}
@@ -195,5 +212,4 @@ automation:
             or as_timestamp(now()) - as_timestamp(last)
               >= (restart_cooldown_hours | int) * 3600
           }}
-    action:
       - action: script.hive_hub_restart
