@@ -67,7 +67,10 @@ views:
             heading: Hot Water
           - type: tile
             entity: water_heater.hive_control
-            name: Tap Hot Water
+            name: Base Hot Water Mode
+          - type: tile
+            entity: sensor.hive_hot_water_status
+            name: Effective Hot Water Status
           - type: entities
             title: Hot Water Schedule
             show_header_toggle: false
@@ -78,6 +81,10 @@ views:
             title: Hot Water Boost
             show_header_toggle: false
             entities:
+              - entity: binary_sensor.hive_control_hotwater_boost
+                name: Boost Active
+              - entity: binary_sensor.hive_control_hotwater_state
+                name: Boiler Hot-Water Output
               - entity: script.hot_water_boost_30_minutes
                 name: Boost 30 Minutes
               - entity: script.hot_water_boost_60_minutes

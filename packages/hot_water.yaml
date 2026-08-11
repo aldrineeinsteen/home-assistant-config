@@ -41,50 +41,171 @@ schedule:
       - from: "17:30:00"
         to: "18:15:00"
 
+template:
+  - sensor:
+      - name: "Hive Hot Water Status"
+        unique_id: hive_hot_water_status
+        state: >
+          {% if states('water_heater.hive_control')
+              in ['unavailable', 'unknown'] %}
+            Unavailable
+          {% elif is_state(
+              'binary_sensor.hive_control_hotwater_boost',
+              'on'
+            ) %}
+            Boosting
+          {% elif is_state(
+              'binary_sensor.hive_control_hotwater_state',
+              'on'
+            ) %}
+            On
+          {% else %}
+            Off
+          {% endif %}
+        icon: >
+          {% if states('water_heater.hive_control')
+              in ['unavailable', 'unknown'] %}
+            mdi:water-alert
+          {% elif is_state(
+              'binary_sensor.hive_control_hotwater_boost',
+              'on'
+            ) %}
+            mdi:water-plus
+          {% elif is_state(
+              'binary_sensor.hive_control_hotwater_state',
+              'on'
+            ) %}
+            mdi:water-boiler
+          {% else %}
+            mdi:water-boiler-off
+          {% endif %}
+        attributes:
+          base_mode: "{{ states('water_heater.hive_control') }}"
+          boost: >
+            {{ states('binary_sensor.hive_control_hotwater_boost') }}
+          heating_output: >
+            {{ states('binary_sensor.hive_control_hotwater_state') }}
+
 script:
+  hot_water_set_boost:
+    alias: Hot Water - Set Boost
+    description: >
+      Internal guarded Hive hot-water boost action used by the dashboard
+      duration controls.
+    icon: mdi:water-sync
+    mode: queued
+    max: 2
+    fields:
+      boost_state:
+        name: Boost state
+        required: true
+        selector:
+          select:
+            options:
+              - "on"
+              - "off"
+      duration:
+        name: Duration
+        required: true
+        selector:
+          duration:
+    sequence:
+      - if:
+          - condition: template
+            value_template: >
+              {{
+                states('water_heater.hive_control')
+                  in ['unavailable', 'unknown']
+              }}
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: hot_water_control_unavailable
+              title: "Hive hot water unavailable"
+              message: >
+                The Hive integration is not currently exposing its hot-water
+                control. Restart Home Assistant before trying the boost again.
+          - stop: "Hive hot-water control is unavailable"
+            error: true
+      - action: hive.boost_hot_water
+        data:
+          entity_id: water_heater.hive_control
+          on_off: "{{ boost_state }}"
+          time_period: "{{ duration }}"
+      - wait_template: >
+          {{
+            is_state(
+              'binary_sensor.hive_control_hotwater_boost',
+              boost_state
+            )
+          }}
+        timeout: "00:01:00"
+        continue_on_timeout: true
+      - if:
+          - condition: template
+            value_template: >
+              {{
+                not is_state(
+                  'binary_sensor.hive_control_hotwater_boost',
+                  boost_state
+                )
+              }}
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: hot_water_boost_not_confirmed
+              title: "Hive hot water command not confirmed"
+              message: >
+                Hive did not report the requested hot-water boost state within
+                one minute. Check the Hive Home dashboard and integration logs.
+          - stop: "Hive did not confirm the hot-water boost command"
+            error: true
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: hot_water_control_unavailable
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: hot_water_boost_not_confirmed
+
   hot_water_boost_30_minutes:
     alias: Hot Water - Boost 30 Minutes
     icon: mdi:water-plus
     mode: single
     sequence:
-      - action: hive.boost_hot_water
+      - action: script.hot_water_set_boost
         data:
-          entity_id: water_heater.hive_control
-          on_off: "on"
-          time_period: "00:30:00"
+          boost_state: "on"
+          duration: "00:30:00"
 
   hot_water_boost_60_minutes:
     alias: Hot Water - Boost 60 Minutes
     icon: mdi:water-plus
     mode: single
     sequence:
-      - action: hive.boost_hot_water
+      - action: script.hot_water_set_boost
         data:
-          entity_id: water_heater.hive_control
-          on_off: "on"
-          time_period: "01:00:00"
+          boost_state: "on"
+          duration: "01:00:00"
 
   hot_water_boost_120_minutes:
     alias: Hot Water - Boost 120 Minutes
     icon: mdi:water-plus
     mode: single
     sequence:
-      - action: hive.boost_hot_water
+      - action: script.hot_water_set_boost
         data:
-          entity_id: water_heater.hive_control
-          on_off: "on"
-          time_period: "02:00:00"
+          boost_state: "on"
+          duration: "02:00:00"
 
   hot_water_cancel_boost:
     alias: Hot Water - Cancel Boost
     icon: mdi:water-off
     mode: single
     sequence:
-      - action: hive.boost_hot_water
+      - action: script.hot_water_set_boost
         data:
-          entity_id: water_heater.hive_control
-          on_off: "off"
-          time_period: "00:00:00"
+          boost_state: "off"
+          duration: "00:00:00"
 
 automation:
   - alias: Hot Water - Apply Weekly Schedule
