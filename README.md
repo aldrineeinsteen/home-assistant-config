@@ -176,6 +176,32 @@ availability for display; it is not the recovery trigger.
 There is no scheduled Hive Hub plug restart. If the plug is deliberately off,
 automatic recovery does not turn it back on.
 
+### Reading the Hive Hub Health card
+
+The Local Services card deliberately separates operating mode from
+connectivity. In particular, `Physical Bridge Control: Off` is not a fault: it
+means the Hive heating controller is in its normal HVAC `off` mode. A failed
+bridge is shown as `Unavailable`, while the separate `Physical Bridge
+Available` row changes to `Off`.
+
+| Dashboard row | Meaning |
+| --- | --- |
+| Service Health | Aggregate result from hub power, Hive cloud connectivity, physical bridge availability, and hot-water control availability. `Healthy` means every required signal is currently available. |
+| Hive Cloud Connected | Hive's integration-provided cloud/hub connectivity signal. `Connected` confirms the Hive service currently reports the hub online, but it is not used alone as proof that the physical bridge is responsive. |
+| Physical Bridge Control | Live `climate.hive_control` operating mode and its current temperature. `Off` means the heating control is idle; `Unavailable` or `Unknown` indicates a connectivity problem. |
+| Physical Bridge Available | A simplified availability check for the physical Hive Bridge control. `On` means Home Assistant can currently communicate with it. This is the primary automatic-recovery signal. |
+| Hub Power | Direct control of the smart plug powering the Hive Hub. Turning this off manually intentionally prevents automatic recovery from turning it back on. |
+| Hub Plug Load | The plug's measured instantaneous power draw in watts. A non-zero value confirms electrical consumption but is diagnostic evidence rather than the recovery trigger. |
+| Minutes Since Last Restart | Minutes since the guarded restart script last ran, whether started manually or automatically. It is also the basis of the six-hour restart cooldown. |
+| Automatic Recovery | Enables or disables the ten-minute physical-bridge failure watcher. It does not create a scheduled restart. |
+| Restart Hub Now | Runs the same guarded power-cycle script manually: verify off, wait one minute, restore power, and then wait for Hive controls to recover. |
+
+For example, a card showing `Service Health: Healthy`, `Hive Cloud Connected:
+Connected`, `Physical Bridge Control: Off`, and `Physical Bridge Available: On`
+describes a healthy, reachable bridge whose heating output is currently idle.
+The temperature beneath `Physical Bridge Control` is its current room reading,
+not an error or a hot-water temperature.
+
 ## Heating modes
 
 `sensor.heating_effective_mode` exposes the active mode, and
@@ -299,10 +325,12 @@ away setback rather than an unverified normal room target.
 
 The outside temperature is validated separately. If it is unavailable,
 weather-based warm shutoff and frost detection pause while valid indoor zones
-continue normal temperature control. A persistent notification records the
-failure and is dismissed automatically after the source recovers. Frost
-protection therefore runs only from a valid outside reading at or below the
-configured freezing cutoff.
+continue normal temperature control. To avoid alerts caused by a weather
+integration restarting, a persistent notification is created only when
+heating policy control is enabled and the reading has remained unavailable for
+15 minutes. It is dismissed when the reading recovers or policy control is
+disabled. Frost protection therefore runs only from a valid outside reading at
+or below the configured freezing cutoff.
 
 Household presence includes Aldrine, Evangeline, Chris, and Keona.
 
