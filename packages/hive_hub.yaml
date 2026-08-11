@@ -1,0 +1,175 @@
+template:
+  - binary_sensor:
+      - name: "Hive Control Available"
+        unique_id: hive_control_available
+        state: >
+          {{
+            states('climate.hive_control')
+              not in ['unavailable', 'unknown']
+            and states('water_heater.hive_control')
+              not in ['unavailable', 'unknown']
+          }}
+
+      - name: "Hive Hub Healthy"
+        unique_id: hive_hub_healthy
+        device_class: connectivity
+        state: >
+          {{
+            is_state('switch.smart_plug_mini_4', 'on')
+            and is_state(
+              'binary_sensor.hive_hub_hive_hub_status',
+              'on'
+            )
+            and is_state('binary_sensor.hive_control_available', 'on')
+          }}
+        attributes:
+          hub_connected: >
+            {{ states('binary_sensor.hive_hub_hive_hub_status') }}
+          hub_power: "{{ states('switch.smart_plug_mini_4') }}"
+          heating_control: "{{ states('climate.hive_control') }}"
+          hot_water_control: "{{ states('water_heater.hive_control') }}"
+
+  - sensor:
+      - name: "Hive Hub Health"
+        unique_id: hive_hub_health
+        state: >
+          {% if is_state('binary_sensor.hive_hub_healthy', 'on') %}
+            Healthy
+          {% elif is_state('switch.smart_plug_mini_4', 'off') %}
+            Powered Off
+          {% elif states('switch.smart_plug_mini_4')
+              in ['unavailable', 'unknown'] %}
+            Unavailable
+          {% elif is_state(
+              'binary_sensor.hive_hub_hive_hub_status',
+              'off'
+            ) %}
+            Disconnected
+          {% else %}
+            Degraded
+          {% endif %}
+        icon: >
+          {% if is_state('binary_sensor.hive_hub_healthy', 'on') %}
+            mdi:check-circle
+          {% elif is_state('switch.smart_plug_mini_4', 'off') %}
+            mdi:power-plug-off
+          {% else %}
+            mdi:alert-circle
+          {% endif %}
+
+      - name: "Hive Restart Last Run Minutes"
+        unique_id: hive_restart_last_run_minutes
+        unit_of_measurement: "min"
+        state: >
+          {% set last = state_attr('script.hive_hub_restart', 'last_triggered') %}
+          {% if last %}
+            {{ ((as_timestamp(now()) - as_timestamp(last)) / 60) | round(0) }}
+          {% else %}
+            unknown
+          {% endif %}
+
+script:
+  hive_hub_restart:
+    alias: "Hive Hub - Restart"
+    description: >
+      Power-cycle the Hive Hub and verify that its controls recover.
+    icon: mdi:restart-alert
+    mode: single
+    sequence:
+      - condition: template
+        value_template: >
+          {{
+            states('switch.smart_plug_mini_4')
+              not in ['unavailable', 'unknown']
+          }}
+      - action: system_log.write
+        data:
+          level: warning
+          message: "Hive Hub restart started"
+      - action: switch.turn_off
+        target:
+          entity_id: switch.smart_plug_mini_4
+      - wait_template: >
+          {{ is_state('switch.smart_plug_mini_4', 'off') }}
+        timeout: "00:00:20"
+        continue_on_timeout: true
+      - if:
+          - condition: template
+            value_template: >
+              {{ not is_state('switch.smart_plug_mini_4', 'off') }}
+        then:
+          - action: persistent_notification.create
+            data:
+              title: "Hive Hub restart failed"
+              message: "The Hive Hub smart plug did not turn off."
+          - stop: "Hive Hub smart plug did not turn off"
+            error: true
+      - delay: "00:01:00"
+      - action: switch.turn_on
+        target:
+          entity_id: switch.smart_plug_mini_4
+      - wait_template: >
+          {{ is_state('switch.smart_plug_mini_4', 'on') }}
+        timeout: "00:00:30"
+        continue_on_timeout: true
+      - if:
+          - condition: template
+            value_template: >
+              {{ not is_state('switch.smart_plug_mini_4', 'on') }}
+        then:
+          - action: persistent_notification.create
+            data:
+              title: "Hive Hub restart failed"
+              message: "The Hive Hub smart plug did not turn back on."
+          - stop: "Hive Hub smart plug did not turn back on"
+            error: true
+      - wait_template: >
+          {{ is_state('binary_sensor.hive_hub_healthy', 'on') }}
+        timeout: "00:05:00"
+        continue_on_timeout: true
+      - if:
+          - condition: template
+            value_template: >
+              {{ not is_state('binary_sensor.hive_hub_healthy', 'on') }}
+        then:
+          - action: persistent_notification.create
+            data:
+              title: "Hive Hub recovery incomplete"
+              message: >
+                The hub power was restored, but Hive controls did not become
+                healthy within five minutes.
+      - action: system_log.write
+        data:
+          level: warning
+          message: >
+            Hive Hub restart completed; health is
+            {{ states('sensor.hive_hub_health') }}
+
+automation:
+  - id: hive_hub_recover_when_unhealthy
+    alias: "Hive Hub - Recover When Unhealthy"
+    description: >
+      Restart the Hive Hub only after a sustained failure, with a cooldown to
+      prevent repeated plug cycles.
+    mode: single
+    variables:
+      restart_cooldown_hours: 6
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.hive_hub_healthy
+        to: "off"
+        for: "00:10:00"
+    condition:
+      - condition: state
+        entity_id: switch.smart_plug_mini_4
+        state: "on"
+      - condition: template
+        value_template: >
+          {% set last = state_attr('script.hive_hub_restart', 'last_triggered') %}
+          {{
+            last is none
+            or as_timestamp(now()) - as_timestamp(last)
+              >= (restart_cooldown_hours | int) * 3600
+          }}
+    action:
+      - action: script.hive_hub_restart

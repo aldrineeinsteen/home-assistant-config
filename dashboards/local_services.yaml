@@ -7,6 +7,31 @@ views:
       - type: vertical-stack
         cards:
           - type: heading
+            heading: Hive Hub
+            icon: mdi:hub
+          - type: entities
+            title: Hive Hub Health
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.hive_hub_health
+                name: Service Health
+              - entity: binary_sensor.hive_hub_hive_hub_status
+                name: Hub Connected
+              - entity: binary_sensor.hive_control_available
+                name: Hive Controls Available
+              - entity: switch.smart_plug_mini_4
+                name: Hub Power
+              - entity: sensor.hive_restart_last_run_minutes
+                name: Minutes Since Last Restart
+              - entity: automation.hive_hub_recover_when_unhealthy
+                name: Automatic Recovery
+              - entity: script.hive_hub_restart
+                name: Restart Hub Now
+
+      - type: vertical-stack
+        cards:
+          - type: heading
             heading: Storage Services
             icon: mdi:nas
           - type: entities

@@ -89,47 +89,6 @@
           - switch.bottom_lights_seed_rack_socket_1
         action: switch.turn_off
   mode: single
-- id: '1774201134936'
-  alias: Restart Hive Hub
-  triggers:
-  - at: 04:00:00
-    trigger: time
-  actions:
-  - data:
-      level: warning
-      message: Hive restart automation started
-    action: system_log.write
-  - target:
-      entity_id: switch.smart_plug_mini_4
-    action: switch.turn_off
-  - wait_template: '{{ is_state(''switch.smart_plug_mini_4'', ''off'') }}'
-    timeout: 00:00:20
-    continue_on_timeout: true
-  - delay:
-      hours: 0
-      minutes: 5
-      seconds: 0
-      milliseconds: 0
-  - target:
-      entity_id: switch.smart_plug_mini_4
-    action: switch.turn_on
-  - wait_template: '{{ is_state(''switch.smart_plug_mini_4'', ''on'') }}'
-    timeout: 00:00:30
-    continue_on_timeout: true
-  - choose:
-    - conditions:
-      - condition: template
-        value_template: '{{ not is_state(''switch.smart_plug_mini_4'', ''on'') }}'
-      sequence:
-      - data:
-          title: Hive Hub restart failed
-          message: The smart plug did not come back on after restart automation.
-        action: persistent_notification.create
-  - data:
-      level: warning
-      message: Hive restart automation completed
-    action: system_log.write
-  mode: single
 - id: ring_motion_mode_manager
   alias: Ring Motion Mode Manager
   description: >

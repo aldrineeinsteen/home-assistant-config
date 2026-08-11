@@ -33,31 +33,6 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Hot Water
-          - type: tile
-            entity: water_heater.hive_control
-            name: Tap Hot Water
-          - type: entities
-            title: Hot Water Schedule
-            show_header_toggle: false
-            entities:
-              - entity: schedule.hot_water_weekly
-                name: Weekday and Weekend Schedule
-          - type: entities
-            title: Hot Water Boost
-            show_header_toggle: false
-            entities:
-              - entity: script.hot_water_boost_30_minutes
-                name: Boost 30 Minutes
-              - entity: script.hot_water_boost_60_minutes
-                name: Boost 60 Minutes
-              - entity: script.hot_water_boost_120_minutes
-                name: Boost 120 Minutes
-              - entity: script.hot_water_cancel_boost
-                name: Cancel Boost
-      - type: grid
-        cards:
-          - type: heading
             heading: Security
           - type: picture-entity
             entity: camera.front_door_live_view
@@ -86,6 +61,31 @@ views:
           - type: tile
             entity: sensor.outside_temperature
             name: Outside Temperature
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hot Water
+          - type: tile
+            entity: water_heater.hive_control
+            name: Tap Hot Water
+          - type: entities
+            title: Hot Water Schedule
+            show_header_toggle: false
+            entities:
+              - entity: schedule.hot_water_weekly
+                name: Weekday and Weekend Schedule
+          - type: entities
+            title: Hot Water Boost
+            show_header_toggle: false
+            entities:
+              - entity: script.hot_water_boost_30_minutes
+                name: Boost 30 Minutes
+              - entity: script.hot_water_boost_60_minutes
+                name: Boost 60 Minutes
+              - entity: script.hot_water_boost_120_minutes
+                name: Boost 120 Minutes
+              - entity: script.hot_water_cancel_boost
+                name: Cancel Boost
       - type: grid
         cards:
           - type: heading
@@ -183,23 +183,6 @@ views:
     type: sections
     max_columns: 3
     sections:
-      - type: grid
-        cards:
-          - type: heading
-            heading: Hive Restart
-          - type: entities
-            title: Restart Automation
-            show_header_toggle: false
-            entities:
-              - entity: automation.restart
-                name: Hive Hub - Restart
-              - entity: sensor.hive_restart_last_run_minutes
-                name: Minutes Since Last Run
-              - entity: binary_sensor.hive_control_available
-                name: Hive Control Available
-          - type: tile
-            entity: switch.smart_plug_mini_4
-            name: Hive Hub Plug
       - type: grid
         cards:
           - type: heading

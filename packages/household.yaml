@@ -71,17 +71,6 @@ template:
             {{ none }}
           {% endif %}
 
-      - name: "Hive Restart Last Run Minutes"
-        unique_id: hive_restart_last_run_minutes
-        unit_of_measurement: "min"
-        state: >
-          {% set last = state_attr('automation.restart', 'last_triggered') %}
-          {% if last %}
-            {{ ((as_timestamp(now()) - as_timestamp(last)) / 60) | round(0) }}
-          {% else %}
-            unknown
-          {% endif %}
-
   - binary_sensor:
       - name: "Seed Rack Lights Should Be On"
         unique_id: seed_rack_lights_should_be_on
@@ -105,14 +94,6 @@ template:
             top_on and bottom_on
             if should_be_on
             else not top_on and not bottom_on
-          }}
-
-      - name: "Hive Control Available"
-        unique_id: hive_control_available
-        state: >
-          {{
-            states('climate.hive_control')
-            not in ['unavailable', 'unknown']
           }}
 
   - sensor:

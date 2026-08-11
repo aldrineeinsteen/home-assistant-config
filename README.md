@@ -149,10 +149,21 @@ weekends, and 17:30 to 18:15 every day. At every other time Home Assistant
 turns the water heater off. The schedule is also applied on Home Assistant
 startup, so a restart cannot leave hot water permanently on.
 
-The Overview dashboard offers 30-, 60-, and 120-minute Hive boosts plus a
-cancel action. Hive tracks the timed boost and returns to the current
-water-heater mode when it expires; the weekly schedule remains responsible for
-the normal on/off windows.
+The Heating view on the Overview dashboard offers 30-, 60-, and 120-minute
+Hive boosts plus a cancel action. Hive tracks the timed boost and returns to
+the current water-heater mode when it expires; the weekly schedule remains
+responsible for the normal on/off windows.
+
+## Hive Hub recovery
+
+`packages/hive_hub.yaml` owns Hive Hub health and recovery. It combines the
+existing hub connectivity, smart-plug, heating, and hot-water entities into a
+single health state shown on the Local Services dashboard. A sustained failure
+of ten minutes triggers a guarded power cycle, with a six-hour cooldown between
+attempts. The same restart script is available as a manual dashboard action.
+
+There is no scheduled Hive Hub plug restart. If the plug is deliberately off,
+automatic recovery does not turn it back on.
 
 ## Heating modes
 
