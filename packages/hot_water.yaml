@@ -96,9 +96,22 @@ automation:
     trigger:
       - platform: state
         entity_id: schedule.hot_water_weekly
+      - platform: state
+        entity_id: water_heater.hive_control
+        from: "unavailable"
+      - platform: state
+        entity_id: water_heater.hive_control
+        from: "unknown"
       - platform: homeassistant
         event: start
     action:
+      - wait_template: >
+          {{
+            states('water_heater.hive_control')
+              not in ['unavailable', 'unknown']
+          }}
+        timeout: "00:10:00"
+        continue_on_timeout: false
       - choose:
           - conditions:
               - condition: state

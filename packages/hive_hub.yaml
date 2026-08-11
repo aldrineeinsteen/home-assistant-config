@@ -65,12 +65,14 @@ template:
       - name: "Hive Restart Last Run Minutes"
         unique_id: hive_restart_last_run_minutes
         unit_of_measurement: "min"
+        availability: >
+          {{ state_attr('script.hive_hub_restart', 'last_triggered') is not none }}
         state: >
           {% set last = state_attr('script.hive_hub_restart', 'last_triggered') %}
           {% if last %}
             {{ ((as_timestamp(now()) - as_timestamp(last)) / 60) | round(0) }}
           {% else %}
-            unknown
+            {{ none }}
           {% endif %}
 
 script:
