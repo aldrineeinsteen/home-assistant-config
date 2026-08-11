@@ -162,6 +162,11 @@ single health state shown on the Local Services dashboard. A sustained failure
 of ten minutes triggers a guarded power cycle, with a six-hour cooldown between
 attempts. The same restart script is available as a manual dashboard action.
 
+The recovery trigger is the Hive integration's own
+`binary_sensor.hive_hub_hive_hub_status`, registered to the physical
+`hive-hub` device. The repository's template health sensor only summarizes
+that raw status with power and control availability for display.
+
 There is no scheduled Hive Hub plug restart. If the plug is deliberately off,
 automatic recovery does not turn it back on.
 

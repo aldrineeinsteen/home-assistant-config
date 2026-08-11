@@ -14,6 +14,8 @@ template:
         unique_id: hive_hub_healthy
         device_class: connectivity
         state: >
+          {# The hub-status entity is supplied by the Hive integration for the
+             physical device named "hive-hub"; it is not a template proxy. #}
           {{
             is_state('switch.smart_plug_mini_4', 'on')
             and is_state(
@@ -124,13 +126,22 @@ script:
           - stop: "Hive Hub smart plug did not turn back on"
             error: true
       - wait_template: >
-          {{ is_state('binary_sensor.hive_hub_healthy', 'on') }}
+          {{
+            is_state('binary_sensor.hive_hub_hive_hub_status', 'on')
+            and is_state('binary_sensor.hive_control_available', 'on')
+          }}
         timeout: "00:05:00"
         continue_on_timeout: true
       - if:
           - condition: template
             value_template: >
-              {{ not is_state('binary_sensor.hive_hub_healthy', 'on') }}
+              {{
+                not is_state(
+                  'binary_sensor.hive_hub_hive_hub_status',
+                  'on'
+                )
+                or not is_state('binary_sensor.hive_control_available', 'on')
+              }}
         then:
           - action: persistent_notification.create
             data:
@@ -156,7 +167,8 @@ automation:
       restart_cooldown_hours: 6
     trigger:
       - platform: state
-        entity_id: binary_sensor.hive_hub_healthy
+        # Integration-provided connectivity for the physical Hive Hub.
+        entity_id: binary_sensor.hive_hub_hive_hub_status
         to: "off"
         for: "00:10:00"
     condition:
