@@ -7,6 +7,27 @@ views:
       - type: vertical-stack
         cards:
           - type: heading
+            heading: System Monitor
+            icon: mdi:raspberry-pi
+          - type: entities
+            title: Home Assistant Raspberry Pi
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.processor_temperature
+                name: CPU Temperature
+              - entity: sensor.processor_use
+                name: CPU Utilisation
+              - entity: sensor.memory_use_percent
+                name: Memory Utilisation
+              - entity: sensor.disk_use_percent
+                name: Disk Utilisation
+              - entity: sensor.last_boot
+                name: Last Boot
+
+      - type: vertical-stack
+        cards:
+          - type: heading
             heading: Hive Hub
             icon: mdi:hub
           - type: entities
