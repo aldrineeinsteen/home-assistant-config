@@ -14,16 +14,10 @@ views:
             show_header_toggle: false
             state_color: true
             entities:
-              - entity: sensor.processor_temperature
+              - entity: sensor.system_monitor_processor_temperature
                 name: CPU Temperature
-              - entity: sensor.processor_use
+              - entity: sensor.system_monitor_processor_use
                 name: CPU Utilisation
-              - entity: sensor.memory_use_percent
-                name: Memory Utilisation
-              - entity: sensor.disk_use_percent
-                name: Disk Utilisation
-              - entity: sensor.last_boot
-                name: Last Boot
 
       - type: vertical-stack
         cards:
