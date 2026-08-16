@@ -193,7 +193,7 @@ Available` row changes to `Off`.
 | Hub Power | Direct control of the smart plug powering the Hive Hub. Turning this off manually intentionally prevents automatic recovery from turning it back on. |
 | Hub Plug Load | The plug's measured instantaneous power draw in watts. A non-zero value confirms electrical consumption but is diagnostic evidence rather than the recovery trigger. |
 | Minutes Since Last Restart | Minutes since the guarded restart script last ran, whether started manually or automatically. It is also the basis of the six-hour restart cooldown. |
-| Automatic Recovery | Enables or disables the ten-minute physical-bridge failure watcher. It does not create a scheduled restart. |
+| Automatic Recovery | Enables or disables recovery after a sustained physical-bridge failure. It checks every ten minutes while the bridge is unavailable, but the six-hour cooldown prevents repeated plug cycles. It does not create a scheduled restart while the bridge is healthy. |
 | Restart Hub Now | Runs the same guarded power-cycle script manually: verify off, wait one minute, restore power, and then wait for Hive controls to recover. |
 
 For example, a card showing `Service Health: Healthy`, `Hive Cloud Connected:

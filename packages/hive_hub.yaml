@@ -187,6 +187,11 @@ automation:
         entity_id: climate.hive_control
         to: "unknown"
         for: "00:10:00"
+      # A state trigger fires only once if the bridge remains unavailable. Poll
+      # the persisted failure so recovery can retry once its cooldown expires.
+      - platform: time_pattern
+        id: physical_bridge_still_unavailable
+        minutes: "/10"
       - platform: homeassistant
         id: startup_check
         event: start
