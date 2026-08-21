@@ -26,6 +26,15 @@ input_number:
     unit_of_measurement: "°C"
     icon: mdi:radiator
 
+  heating_target_dining_room:
+    name: Heating Target Dining Room
+    initial: 22
+    min: 15
+    max: 25
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:food
+
   heating_outside_cutoff:
     name: Heating Outside Warm-Weather Cutoff
     initial: 13
@@ -156,6 +165,22 @@ input_boolean:
   heating_policy_control_enabled:
     name: Heating Repository Control Enabled
     icon: mdi:shield-check-outline
+
+  heating_ground_floor_warm_weather_override:
+    name: Ground Floor Override Warm-Weather Cutoff
+    icon: mdi:weather-sunny-alert
+
+  heating_first_floor_warm_weather_override:
+    name: First Floor Override Warm-Weather Cutoff
+    icon: mdi:weather-sunny-alert
+
+  heating_chris_room_warm_weather_override:
+    name: Chris Room Override Warm-Weather Cutoff
+    icon: mdi:weather-sunny-alert
+
+  heating_dining_room_warm_weather_override:
+    name: Dining Room Override Warm-Weather Cutoff
+    icon: mdi:weather-sunny-alert
 
 schedule:
   heating_weekly_mode:
@@ -374,6 +399,43 @@ template:
             {{ states('input_number.heating_target_chris_room') | float(20) }}
           {% endif %}
 
+      - name: Heating Dining Room Current Temperature
+        unique_id: heating_dining_room_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        icon: mdi:thermometer
+        availability: >
+          {{ is_number(state_attr('climate.dining_room_1', 'current_temperature')) }}
+        state: >
+          {{ state_attr('climate.dining_room_1', 'current_temperature') | float }}
+
+      - name: Heating Dining Room Effective Target
+        unique_id: heating_dining_room_effective_target
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        icon: mdi:food
+        availability: >
+          {{
+            states('sensor.heating_effective_mode')
+              in ['Home', 'Sleep', 'Away', 'Holiday', 'Boost', 'Off']
+            and is_number(states('input_number.heating_target_dining_room'))
+            and is_number(states('input_number.heating_boost_target'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set scheduled = state_attr('schedule.heating_weekly_mode', 'target') %}
+          {% if mode == 'Boost' %}
+            {{ states('input_number.heating_boost_target') | float(22) }}
+          {% elif mode in ['Home', 'Sleep']
+            and is_state('schedule.heating_weekly_mode', 'on')
+            and is_number(scheduled) %}
+            {{ [[scheduled | float, 15] | max, 25] | min }}
+          {% else %}
+            {{ states('input_number.heating_target_dining_room') | float(22) }}
+          {% endif %}
+
   - binary_sensor:
       - name: Heating Ground Floor Demand
         unique_id: heating_ground_floor_demand
@@ -507,6 +569,39 @@ template:
           mode: "{{ states('sensor.heating_effective_mode') }}"
           hysteresis: "{{ states('input_number.heating_on_margin') }}"
 
+      - name: Heating Dining Room Demand
+        unique_id: heating_dining_room_demand
+        icon: mdi:radiator
+        availability: >
+          {{
+            is_number(states('sensor.heating_dining_room_current_temperature'))
+            and is_number(states('sensor.heating_dining_room_effective_target'))
+            and is_number(states('input_number.heating_on_margin'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set current_state = states('sensor.heating_dining_room_current_temperature') %}
+          {% set target_state = states('sensor.heating_dining_room_effective_target') %}
+          {% set margin_state = states('input_number.heating_on_margin') %}
+          {% set current = current_state | float(0) %}
+          {% set target = target_state | float(0) %}
+          {% set hysteresis = margin_state | float(0.3) %}
+          {% if not (is_number(current_state) and is_number(target_state)
+            and is_number(margin_state)) %}
+            false
+          {% elif mode not in ['Home', 'Sleep', 'Boost'] %}
+            false
+          {% elif this.state == 'on' %}
+            {{ current < target + hysteresis }}
+          {% else %}
+            {{ current < target - hysteresis }}
+          {% endif %}
+        attributes:
+          current_temperature: "{{ states('sensor.heating_dining_room_current_temperature') }}"
+          target_temperature: "{{ states('sensor.heating_dining_room_effective_target') }}"
+          mode: "{{ states('sensor.heating_effective_mode') }}"
+          hysteresis: "{{ states('input_number.heating_on_margin') }}"
+
       - name: Heating Boiler Demand
         unique_id: heating_boiler_demand
         icon: mdi:fire
@@ -519,16 +614,17 @@ template:
             and is_number(freezing)
             and outside | float <= freezing | float %}
           {% set mode = states('sensor.heating_effective_mode') %}
-          {% set weather_allows =
-            mode == 'Boost'
-            or not is_state(
-              'binary_sensor.outside_warm_enough_for_heating_off', 'on'
-            ) %}
-          {% set zone_demand =
-            is_state('binary_sensor.heating_ground_floor_demand', 'on')
-            or is_state('binary_sensor.heating_first_floor_demand', 'on')
-            or is_state('binary_sensor.heating_chris_room_demand', 'on') %}
-          {{ frost or (weather_allows and zone_demand) }}
+          {% set unrestricted = mode == 'Boost' or not is_state(
+            'binary_sensor.outside_warm_enough_for_heating_off', 'on') %}
+          {% set ground_call = is_state('binary_sensor.heating_ground_floor_demand', 'on')
+            and (unrestricted or is_state('input_boolean.heating_ground_floor_warm_weather_override', 'on')) %}
+          {% set first_call = is_state('binary_sensor.heating_first_floor_demand', 'on')
+            and (unrestricted or is_state('input_boolean.heating_first_floor_warm_weather_override', 'on')) %}
+          {% set chris_call = is_state('binary_sensor.heating_chris_room_demand', 'on')
+            and (unrestricted or is_state('input_boolean.heating_chris_room_warm_weather_override', 'on')) %}
+          {% set dining_call = is_state('binary_sensor.heating_dining_room_demand', 'on')
+            and (unrestricted or is_state('input_boolean.heating_dining_room_warm_weather_override', 'on')) %}
+          {{ frost or ground_call or first_call or chris_call or dining_call }}
         attributes:
           source: >
             {% set outside = states('sensor.outside_temperature') %}
@@ -537,10 +633,7 @@ template:
             {% set frost =
               is_number(outside) and is_number(freezing)
               and outside | float <= freezing | float %}
-            {% set zone_demand =
-              is_state('binary_sensor.heating_ground_floor_demand', 'on')
-              or is_state('binary_sensor.heating_first_floor_demand', 'on')
-              or is_state('binary_sensor.heating_chris_room_demand', 'on') %}
+            {% set zone_demand = is_state('binary_sensor.heating_boiler_demand', 'on') %}
             {% if frost and zone_demand %}
               zone_and_frost
             {% elif frost %}
@@ -570,6 +663,9 @@ template:
           {% if is_state('binary_sensor.heating_chris_room_demand', 'on') %}
             {% set zones = zones + ['chris_room'] %}
           {% endif %}
+          {% if is_state('binary_sensor.heating_dining_room_demand', 'on') %}
+            {% set zones = zones + ['dining_room'] %}
+          {% endif %}
           {{ zones | join(', ') if zones | count > 0 else 'none' }}
         attributes:
           invalid_zones: >
@@ -587,6 +683,11 @@ template:
             ) %}
               {% set zones = zones + ['chris_room'] %}
             {% endif %}
+            {% if not is_number(
+              states('sensor.heating_dining_room_current_temperature')
+            ) %}
+              {% set zones = zones + ['dining_room'] %}
+            {% endif %}
             {{ zones | join(', ') if zones | count > 0 else 'none' }}
 
       - name: Heating Boiler Lockout Reason
@@ -601,6 +702,9 @@ template:
             or is_number(states('sensor.first_floor_avg_temperature'))
             or is_number(
               states('sensor.chris_bedroom_current_temperature')
+            )
+            or is_number(
+              states('sensor.heating_dining_room_current_temperature')
             ) %}
           {% set outside = states('sensor.outside_temperature') %}
           {% set freezing =
@@ -645,7 +749,7 @@ template:
             mode_holiday
           {% elif is_state(
             'binary_sensor.outside_warm_enough_for_heating_off', 'on'
-          ) and mode != 'Boost' and not frost %}
+          ) and mode != 'Boost' and not frost and not demand %}
             warm_weather_cutoff
           {% elif not demand %}
             no_zone_demand
@@ -680,15 +784,10 @@ template:
           {% set zone_demand =
             is_state('binary_sensor.heating_ground_floor_demand', 'on')
             or is_state('binary_sensor.heating_first_floor_demand', 'on')
-            or is_state('binary_sensor.heating_chris_room_demand', 'on') %}
-          {% set zone_call =
-            zone_demand
-            and (
-              mode == 'Boost'
-              or not is_state(
-                'binary_sensor.outside_warm_enough_for_heating_off', 'on'
-              )
-            ) %}
+            or is_state('binary_sensor.heating_chris_room_demand', 'on')
+            or is_state('binary_sensor.heating_dining_room_demand', 'on') %}
+          {% set zone_call = zone_demand
+            and is_state('binary_sensor.heating_boiler_demand', 'on') %}
           {% set outside = states('sensor.outside_temperature') %}
           {% set freezing =
             states('input_number.heating_freezing_cutoff') %}
@@ -776,6 +875,12 @@ script:
         selector:
           entity:
             domain: input_number
+      warm_weather_override_entity:
+        name: Warm-weather override entity
+        required: true
+        selector:
+          entity:
+            domain: input_boolean
     variables:
       effective_mode: "{{ states('sensor.heating_effective_mode') }}"
       current_temperature_state: >
@@ -796,10 +901,11 @@ script:
         {{
           effective_mode in ['Home', 'Sleep', 'Boost']
           and (
-            effective_mode == 'Boost'
-            or not is_state(
-              'binary_sensor.outside_warm_enough_for_heating_off', 'on'
-            )
+          effective_mode == 'Boost'
+          or not is_state(
+            'binary_sensor.outside_warm_enough_for_heating_off', 'on'
+          )
+          or is_state(warm_weather_override_entity, 'on')
           )
           and is_state(demand_entity, 'on')
         }}

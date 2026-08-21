@@ -149,6 +149,10 @@
         - input_number.heating_minimum_boiler_on_minutes
         - input_number.heating_minimum_boiler_off_minutes
         - input_number.heating_hive_acknowledgement_tolerance
+        - input_boolean.heating_ground_floor_warm_weather_override
+        - input_boolean.heating_first_floor_warm_weather_override
+        - input_boolean.heating_chris_room_warm_weather_override
+        - input_boolean.heating_dining_room_warm_weather_override
     - platform: homeassistant
       event: start
     - platform: time_pattern
@@ -588,15 +592,21 @@
         - binary_sensor.heating_ground_floor_demand
         - binary_sensor.heating_first_floor_demand
         - binary_sensor.heating_chris_room_demand
+        - binary_sensor.heating_dining_room_demand
         - binary_sensor.outside_warm_enough_for_heating_off
         - sensor.heating_ground_floor_effective_target
         - sensor.heating_first_floor_effective_target
         - sensor.heating_chris_room_effective_target
+        - sensor.heating_dining_room_effective_target
         - sensor.outside_temperature
         - sensor.heating_effective_mode
         - input_number.heating_away_setback_target
         - input_number.heating_chris_room_frost_target
         - input_number.heating_freezing_cutoff
+        - input_boolean.heating_ground_floor_warm_weather_override
+        - input_boolean.heating_first_floor_warm_weather_override
+        - input_boolean.heating_chris_room_warm_weather_override
+        - input_boolean.heating_dining_room_warm_weather_override
         - input_boolean.heating_policy_control_enabled
     - platform: homeassistant
       event: start
@@ -614,21 +624,31 @@
             target: sensor.heating_ground_floor_effective_target
             current: sensor.radiator_valve_1_current_temperature_5
             frost_target: input_number.heating_away_setback_target
+            warm_weather_override: input_boolean.heating_ground_floor_warm_weather_override
           - trv: climate.radiator_valve_1_2
             demand: binary_sensor.heating_first_floor_demand
             target: sensor.heating_first_floor_effective_target
             current: sensor.radiator_valve_1_current_temperature_2
             frost_target: input_number.heating_away_setback_target
+            warm_weather_override: input_boolean.heating_first_floor_warm_weather_override
           - trv: climate.radiator_valve_1_master_bedroom_3
             demand: binary_sensor.heating_first_floor_demand
             target: sensor.heating_first_floor_effective_target
             current: sensor.radiator_valve_1_current_temperature
             frost_target: input_number.heating_away_setback_target
+            warm_weather_override: input_boolean.heating_first_floor_warm_weather_override
           - trv: climate.chris_bedroom_1
             demand: binary_sensor.heating_chris_room_demand
             target: sensor.heating_chris_room_effective_target
             current: sensor.chris_bedroom_current_temperature
             frost_target: input_number.heating_chris_room_frost_target
+            warm_weather_override: input_boolean.heating_chris_room_warm_weather_override
+          - trv: climate.dining_room_1
+            demand: binary_sensor.heating_dining_room_demand
+            target: sensor.heating_dining_room_effective_target
+            current: sensor.heating_dining_room_current_temperature
+            frost_target: input_number.heating_away_setback_target
+            warm_weather_override: input_boolean.heating_dining_room_warm_weather_override
         sequence:
           - action: script.heating_apply_trv_policy
             data:
@@ -637,3 +657,4 @@
               target_entity: "{{ repeat.item.target }}"
               current_temperature_entity: "{{ repeat.item.current }}"
               frost_target_entity: "{{ repeat.item.frost_target }}"
+              warm_weather_override_entity: "{{ repeat.item.warm_weather_override }}"

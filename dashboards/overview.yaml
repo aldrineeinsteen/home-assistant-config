@@ -112,6 +112,16 @@ views:
       - type: grid
         cards:
           - type: heading
+            heading: Dining Room
+          - type: tile
+            entity: sensor.heating_dining_room_current_temperature
+            name: Dining Room Current
+          - type: tile
+            entity: input_number.heating_target_dining_room
+            name: Dining Room Target
+      - type: grid
+        cards:
+          - type: heading
             heading: First Floor
           - type: history-graph
             title: Mean Temperature (Master Bedroom 1–3)
@@ -171,6 +181,16 @@ views:
                 name: First Floor Target
               - entity: input_number.heating_target_chris_room
                 name: Chris Room Target
+              - entity: input_number.heating_target_dining_room
+                name: Dining Room Target
+              - entity: input_boolean.heating_ground_floor_warm_weather_override
+                name: Ground Floor Override Cutoff
+              - entity: input_boolean.heating_first_floor_warm_weather_override
+                name: First Floor Override Cutoff
+              - entity: input_boolean.heating_chris_room_warm_weather_override
+                name: Chris Room Override Cutoff
+              - entity: input_boolean.heating_dining_room_warm_weather_override
+                name: Dining Room Override Cutoff
               - entity: input_number.heating_outside_cutoff
                 name: Outside Cutoff
               - entity: input_number.heating_freezing_cutoff
