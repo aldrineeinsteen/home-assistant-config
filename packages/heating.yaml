@@ -406,9 +406,9 @@ template:
         state_class: measurement
         icon: mdi:thermometer
         availability: >
-          {{ is_number(state_attr('climate.dining_room_1', 'current_temperature')) }}
+          {{ is_number(state_attr('climate.dinning_room_1', 'current_temperature')) }}
         state: >
-          {{ state_attr('climate.dining_room_1', 'current_temperature') | float }}
+          {{ state_attr('climate.dinning_room_1', 'current_temperature') | float }}
 
       - name: Heating Dining Room Effective Target
         unique_id: heating_dining_room_effective_target

@@ -643,7 +643,7 @@
             current: sensor.chris_bedroom_current_temperature
             frost_target: input_number.heating_chris_room_frost_target
             warm_weather_override: input_boolean.heating_chris_room_warm_weather_override
-          - trv: climate.dining_room_1
+          - trv: climate.dinning_room_1
             demand: binary_sensor.heating_dining_room_demand
             target: sensor.heating_dining_room_effective_target
             current: sensor.heating_dining_room_current_temperature

@@ -118,14 +118,14 @@ template:
           {% set temps = [
             state_attr('climate.radiator_valve_1_5', 'current_temperature'),
             state_attr('climate.hive_control', 'current_temperature'),
-            state_attr('climate.dining_room_1', 'current_temperature')
+            state_attr('climate.dinning_room_1', 'current_temperature')
           ] %}
           {{ temps | select('number') | list | count > 0 }}
         state: >
           {% set temps = [
             state_attr('climate.radiator_valve_1_5', 'current_temperature'),
             state_attr('climate.hive_control', 'current_temperature'),
-            state_attr('climate.dining_room_1', 'current_temperature')
+            state_attr('climate.dinning_room_1', 'current_temperature')
           ] %}
           {% set valid = temps | select('number') | list %}
           {% if valid | count > 0 %}
