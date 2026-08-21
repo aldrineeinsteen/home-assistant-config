@@ -106,9 +106,25 @@ views:
           - type: tile
             entity: sensor.ground_floor_avg_temperature
             name: Ground Floor Current
-          - type: tile
-            entity: input_number.heating_target_ground_floor
-            name: Ground Floor Target
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.heating_ground_floor_demand
+                state: "on"
+            card:
+              type: tile
+              entity: input_number.heating_target_ground_floor
+              name: Ground Floor Target
+              color: yellow
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.heating_ground_floor_demand
+                state_not: "on"
+            card:
+              type: tile
+              entity: input_number.heating_target_ground_floor
+              name: Ground Floor Target
       - type: grid
         cards:
           - type: heading
@@ -116,9 +132,25 @@ views:
           - type: tile
             entity: sensor.heating_dining_room_current_temperature
             name: Dining Room Current
-          - type: tile
-            entity: input_number.heating_target_dining_room
-            name: Dining Room Target
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.heating_dining_room_demand
+                state: "on"
+            card:
+              type: tile
+              entity: input_number.heating_target_dining_room
+              name: Dining Room Target
+              color: yellow
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.heating_dining_room_demand
+                state_not: "on"
+            card:
+              type: tile
+              entity: input_number.heating_target_dining_room
+              name: Dining Room Target
       - type: grid
         cards:
           - type: heading
@@ -132,9 +164,25 @@ views:
           - type: tile
             entity: sensor.first_floor_avg_temperature
             name: First Floor Current
-          - type: tile
-            entity: input_number.heating_target_first_floor
-            name: First Floor Target
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.heating_first_floor_demand
+                state: "on"
+            card:
+              type: tile
+              entity: input_number.heating_target_first_floor
+              name: First Floor Target
+              color: yellow
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.heating_first_floor_demand
+                state_not: "on"
+            card:
+              type: tile
+              entity: input_number.heating_target_first_floor
+              name: First Floor Target
       - type: grid
         cards:
           - type: heading
@@ -148,9 +196,25 @@ views:
           - type: tile
             entity: sensor.second_floor_avg_temperature
             name: Second Floor Current
-          - type: tile
-            entity: input_number.heating_target_chris_room
-            name: Chris Room Target
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.heating_chris_room_demand
+                state: "on"
+            card:
+              type: tile
+              entity: input_number.heating_target_chris_room
+              name: Chris Room Target
+              color: yellow
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.heating_chris_room_demand
+                state_not: "on"
+            card:
+              type: tile
+              entity: input_number.heating_target_chris_room
+              name: Chris Room Target
       - type: grid
         cards:
           - type: heading
@@ -177,12 +241,24 @@ views:
                 name: Outside Warm Enough
               - entity: input_number.heating_target_ground_floor
                 name: Ground Floor Target
+              - entity: binary_sensor.heating_ground_floor_demand
+                name: Ground Floor Heating
+                state_color: true
               - entity: input_number.heating_target_first_floor
                 name: First Floor Target
+              - entity: binary_sensor.heating_first_floor_demand
+                name: First Floor Heating
+                state_color: true
               - entity: input_number.heating_target_chris_room
                 name: Chris Room Target
+              - entity: binary_sensor.heating_chris_room_demand
+                name: Chris Room Heating
+                state_color: true
               - entity: input_number.heating_target_dining_room
                 name: Dining Room Target
+              - entity: binary_sensor.heating_dining_room_demand
+                name: Dining Room Heating
+                state_color: true
               - entity: input_boolean.heating_ground_floor_warm_weather_override
                 name: Ground Floor Override Cutoff
               - entity: input_boolean.heating_first_floor_warm_weather_override
