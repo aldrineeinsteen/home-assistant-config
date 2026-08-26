@@ -8,7 +8,7 @@ LABEL \
   io.hass.type="addon" \
   io.hass.arch="${BUILD_ARCH}"
 
-RUN apk add --no-cache logrotate rsyslog tzdata
+RUN apk add --no-cache busybox-extras logrotate rsyslog tzdata
 
 COPY run.sh rotate.sh /usr/local/bin/
 RUN chmod 0755 /usr/local/bin/run.sh /usr/local/bin/rotate.sh

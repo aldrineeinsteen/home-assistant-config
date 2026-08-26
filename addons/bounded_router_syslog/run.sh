@@ -47,7 +47,7 @@ cat >/etc/logrotate.d/gt-be98 <<'EOF'
 }
 EOF
 
-busybox httpd -f -p 8099 -h /data/logs &
+httpd -f -p 8099 -h /data/logs &
 HTTPD_PID=$!
 
 rsyslogd -n -f /etc/rsyslog.conf &
