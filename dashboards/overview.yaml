@@ -66,6 +66,10 @@ views:
             title: Heating Actions
             show_header_toggle: false
             entities:
+              - entity: input_select.heating_manual_mode
+                name: Manual Mode
+              - entity: input_boolean.heating_policy_control_enabled
+                name: Repository Control Enabled
               - entity: script.heating_start_boost
                 name: Start Boost
               - entity: script.heating_cancel_boost
@@ -120,6 +124,19 @@ views:
                 name: Dining Room Target
               - entity: input_number.heating_target_chris_room
                 name: Second Floor Target
+          - type: entities
+            title: Warm-Weather Overrides
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: input_boolean.heating_ground_floor_warm_weather_override
+                name: Ground Floor Override
+              - entity: input_boolean.heating_first_floor_warm_weather_override
+                name: First Floor Override
+              - entity: input_boolean.heating_dining_room_warm_weather_override
+                name: Dining Room Override
+              - entity: input_boolean.heating_chris_room_warm_weather_override
+                name: Second Floor Override
   - title: Automations
     path: automations
     type: sections
