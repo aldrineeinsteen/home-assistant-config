@@ -1,136 +1,16 @@
+title: Local Services
 views:
-  - title: Local Services
-    path: services
-    icon: mdi:server-network
-    theme: Backend-selected
-    cards:
-      - type: vertical-stack
+  - title: Network
+    path: network
+    icon: mdi:lan
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
         cards:
           - type: heading
-            heading: System Monitor
-            icon: mdi:raspberry-pi
-          - type: entities
-            title: Home Assistant Raspberry Pi
-            show_header_toggle: false
-            state_color: true
-            entities:
-              - entity: sensor.system_monitor_processor_temperature
-                name: CPU Temperature
-              - entity: sensor.system_monitor_processor_use
-                name: CPU Utilisation
-
-      - type: vertical-stack
-        cards:
-          - type: heading
-            heading: Hive Hub
-            icon: mdi:hub
-          - type: entities
-            title: Hive Hub Health
-            show_header_toggle: false
-            state_color: true
-            entities:
-              - entity: sensor.hive_hub_health
-                name: Service Health
-              - entity: binary_sensor.hive_hub_hive_hub_status
-                name: Hive Cloud Connected
-              - entity: climate.hive_control
-                name: Physical Bridge Control
-              - entity: binary_sensor.hive_control_available
-                name: Physical Bridge Available
-              - entity: switch.smart_plug_mini_4
-                name: Hub Power
-              - entity: sensor.smart_plug_mini_power_4
-                name: Hub Plug Load
-              - entity: sensor.hive_restart_last_run_minutes
-                name: Minutes Since Last Restart
-              - entity: automation.hive_hub_recover_when_unhealthy
-                name: Automatic Recovery
-              - entity: script.hive_hub_restart
-                name: Restart Hub Now
-
-      - type: vertical-stack
-        cards:
-          - type: heading
-            heading: Storage Services
-            icon: mdi:nas
-          - type: entities
-            title: OpenMediaVault
-            show_header_toggle: false
-            state_color: true
-            entities:
-              - entity: sensor.omv_storage_health
-                name: Storage Health
-              - entity: sensor.omv_filesystem_md0
-                name: Data Used
-              - entity: sensor.omv_data_available
-                name: Data Available
-              - type: attribute
-                entity: sensor.omv_filesystem_md0
-                attribute: mounted
-                name: Filesystem Mounted
-                icon: mdi:harddisk
-              - type: attribute
-                entity: sensor.omv_filesystem_md0
-                attribute: _readonly
-                name: Filesystem Read-only
-                icon: mdi:lock-outline
-              - type: section
-                label: Disk Temperatures
-              - entity: sensor.omv_disk_sda
-                name: Disk sda
-              - entity: sensor.omv_disk_sdb
-                name: Disk sdb
-              - entity: sensor.omv_disk_sdc
-                name: Disk sdc
-              - entity: sensor.omv_disk_sdd
-                name: Disk sdd
-              - entity: sensor.omv_disk_sde
-                name: Disk sde
-              - type: section
-                label: System Status
-              - entity: binary_sensor.omv_system_update_available
-                name: Package Updates Available
-              - entity: binary_sensor.omv_system_reboot_pending
-                name: Reboot Pending
-              - entity: binary_sensor.omv_system_config_dirty
-                name: Configuration Dirty
-              - entity: update.openmediavault_update
-                name: Integration Update
-
-      - type: vertical-stack
-        cards:
-          - type: heading
-            heading: Media Services
-            icon: mdi:play-network
-          - type: entities
-            title: Jellyfin
-            show_header_toggle: false
-            state_color: true
-            entities:
-              - entity: sensor.jellyfin_health
-                name: Service Health
-              - entity: sensor.jellyfin_runtime
-                name: Runtime Health
-              - entity: binary_sensor.jellyfin_raspberry_pi
-                name: Host Reachable
-              - entity: sensor.jellyfin_version
-                name: Version
-              - type: attribute
-                entity: sensor.jellyfin_version
-                attribute: ServerName
-                name: Server
-                icon: mdi:server
-              - type: attribute
-                entity: sensor.jellyfin_version
-                attribute: LocalAddress
-                name: Backend
-                icon: mdi:ip-network
-
-      - type: vertical-stack
-        cards:
-          - type: heading
-            heading: Network Services
-            icon: mdi:lan
+            heading: DNS Filtering
+            icon: mdi:shield-check
           - type: entities
             title: Pi-hole
             show_header_toggle: false
@@ -158,6 +38,11 @@ views:
                 name: FTL
               - entity: update.pi_hole_web_update_available
                 name: Web Interface
+      - type: grid
+        cards:
+          - type: heading
+            heading: Remote Access
+            icon: mdi:vpn
           - type: entities
             title: WireGuard
             show_header_toggle: false
@@ -187,8 +72,13 @@ views:
                 icon: mdi:upload-network
               - entity: sensor.wireguard_telemetry_status
                 name: Telemetry Updated
+      - type: grid
+        cards:
+          - type: heading
+            heading: Router
+            icon: mdi:router-wireless
           - type: entities
-            title: ASUS GT-BE98 Router
+            title: ASUS GT-BE98
             show_header_toggle: false
             state_color: true
             entities:
@@ -196,3 +86,121 @@ views:
                 name: Router Health
               - entity: binary_sensor.asus_gt_be98_router
                 name: Router Reachable
+          - type: button
+            name: Open Router Syslog
+            icon: mdi:text-box-search-outline
+            show_state: false
+            tap_action:
+              action: url
+              url_path: https://ha.lan/app/local_bounded_router_syslog
+  - title: Heating
+    path: heating
+    icon: mdi:radiator
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hive Hub
+            icon: mdi:hub
+          - type: entities
+            title: Hive Hub Health
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.hive_hub_health
+                name: Service Health
+              - entity: binary_sensor.hive_hub_hive_hub_status
+                name: Hive Cloud Connected
+              - entity: climate.hive_control
+                name: Physical Bridge Control
+              - entity: binary_sensor.hive_control_available
+                name: Physical Bridge Available
+              - entity: switch.smart_plug_mini_4
+                name: Hub Power
+              - entity: sensor.smart_plug_mini_power_4
+                name: Hub Plug Load
+              - entity: sensor.hive_restart_last_run_minutes
+                name: Minutes Since Last Restart
+              - entity: automation.hive_hub_recover_when_unhealthy
+                name: Automatic Recovery
+              - entity: script.hive_hub_restart
+                name: Restart Hub Now
+  - title: Services
+    path: services
+    icon: mdi:server-network
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Home Assistant
+            icon: mdi:home-assistant
+          - type: entities
+            title: System Monitor
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.system_monitor_processor_temperature
+                name: CPU Temperature
+              - entity: sensor.system_monitor_processor_use
+                name: CPU Utilisation
+      - type: grid
+        cards:
+          - type: heading
+            heading: Storage
+            icon: mdi:nas
+          - type: entities
+            title: OpenMediaVault
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.omv_storage_health
+                name: Storage Health
+              - entity: sensor.omv_filesystem_md0
+                name: Data Used
+              - entity: sensor.omv_data_available
+                name: Data Available
+          - type: entities
+            title: OpenMediaVault System Status
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: binary_sensor.omv_system_update_available
+                name: Package Updates Available
+              - entity: binary_sensor.omv_system_reboot_pending
+                name: Reboot Pending
+              - entity: binary_sensor.omv_system_config_dirty
+                name: Configuration Dirty
+              - entity: update.openmediavault_update
+                name: Integration Update
+      - type: grid
+        cards:
+          - type: heading
+            heading: Media
+            icon: mdi:play-network
+          - type: entities
+            title: Jellyfin
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.jellyfin_health
+                name: Service Health
+              - entity: sensor.jellyfin_runtime
+                name: Runtime Health
+              - entity: binary_sensor.jellyfin_raspberry_pi
+                name: Host Reachable
+              - entity: sensor.jellyfin_version
+                name: Version
+              - type: attribute
+                entity: sensor.jellyfin_version
+                attribute: ServerName
+                name: Server
+                icon: mdi:server
+              - type: attribute
+                entity: sensor.jellyfin_version
+                attribute: LocalAddress
+                name: Backend
+                icon: mdi:ip-network

@@ -1,0 +1,200 @@
+title: Heating Monitor
+views:
+  - title: Status
+    path: status
+    icon: mdi:thermostat-box
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heating Status
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.heating_effective_mode
+                name: Effective Mode
+              - entity: sensor.heating_effective_mode_reason
+                name: Mode Reason
+              - entity: binary_sensor.heating_boiler_demand
+                name: Boiler Demand
+              - entity: sensor.heating_active_zones
+                name: Active Zones
+              - entity: sensor.heating_boiler_lockout_reason
+                name: Boiler Lockout Reason
+              - entity: sensor.heating_requested_target
+                name: Requested Target
+      - type: grid
+        cards:
+          - type: heading
+            heading: Conditions
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: sensor.outside_temperature
+                name: Outside Temperature
+              - entity: binary_sensor.anyone_home
+                name: Anyone Home
+              - entity: binary_sensor.heating_occupancy_stable
+                name: Occupancy Stable
+              - entity: binary_sensor.outside_warm_enough_for_heating_off
+                name: Outside Warm Enough
+              - entity: timer.heating_boost
+                name: Boost Timer
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hive
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: binary_sensor.hive_control_available
+                name: Hive Available
+              - entity: climate.hive_control
+                name: Heating Bridge
+              - entity: water_heater.hive_control
+                name: Hot Water Bridge
+              - entity: binary_sensor.hive_control_hotwater_state
+                name: Boiler Hot-Water Output
+  - title: Downstairs
+    path: downstairs
+    icon: mdi:floor-plan
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Ground Floor
+          - type: history-graph
+            title: Temperature — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.ground_floor_avg_temperature
+                name: Mean temperature
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.ground_floor_avg_temperature
+                name: Current
+              - entity: sensor.heating_ground_floor_effective_target
+                name: Effective Target
+              - entity: binary_sensor.heating_ground_floor_demand
+                name: Demand
+      - type: grid
+        cards:
+          - type: heading
+            heading: Dining Room
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.heating_dining_room_current_temperature
+                name: Current
+              - entity: sensor.heating_dining_room_effective_target
+                name: Effective Target
+              - entity: binary_sensor.heating_dining_room_demand
+                name: Demand
+  - title: Upstairs
+    path: upstairs
+    icon: mdi:home-floor-1
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: First Floor
+          - type: history-graph
+            title: Temperature — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.first_floor_avg_temperature
+                name: Mean temperature
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.first_floor_avg_temperature
+                name: Current
+              - entity: sensor.heating_first_floor_effective_target
+                name: Effective Target
+              - entity: binary_sensor.heating_first_floor_demand
+                name: Demand
+      - type: grid
+        cards:
+          - type: heading
+            heading: Second Floor
+          - type: history-graph
+            title: Temperature — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.second_floor_avg_temperature
+                name: Mean temperature
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.second_floor_avg_temperature
+                name: Current
+              - entity: sensor.heating_chris_room_effective_target
+                name: Effective Target
+              - entity: binary_sensor.heating_chris_room_demand
+                name: Demand
+  - title: Diagnostics
+    path: diagnostics
+    icon: mdi:stethoscope
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Policy
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.heating_policy_control_enabled
+                name: Repository Control Enabled
+              - entity: input_select.heating_manual_mode
+                name: Manual Mode
+              - entity: schedule.heating_weekly_mode
+                name: Weekly Schedule
+              - entity: input_number.heating_outside_cutoff
+                name: Outside Cutoff
+              - entity: input_number.heating_freezing_cutoff
+                name: Freezing Cutoff
+      - type: grid
+        cards:
+          - type: heading
+            heading: Boiler Timing
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: input_number.heating_boiler_call_temperature
+                name: Boiler Call Temperature
+              - entity: input_number.heating_minimum_boiler_on_minutes
+                name: Minimum On Time
+              - entity: input_number.heating_minimum_boiler_off_minutes
+                name: Minimum Off Time
+              - entity: input_number.heating_hive_acknowledgement_tolerance
+                name: Hive Acknowledgement Tolerance
+      - type: grid
+        cards:
+          - type: heading
+            heading: Zone Overrides
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.heating_ground_floor_warm_weather_override
+                name: Ground Floor Override
+              - entity: input_boolean.heating_first_floor_warm_weather_override
+                name: First Floor Override
+              - entity: input_boolean.heating_dining_room_warm_weather_override
+                name: Dining Room Override
+              - entity: input_boolean.heating_chris_room_warm_weather_override
+                name: Second Floor Override

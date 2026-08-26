@@ -46,25 +46,36 @@ views:
             camera_view: live
             show_state: false
             show_name: true
-  - title: Heating
+  - title: Heating Controls
     path: heating
+    icon: mdi:radiator
     type: sections
     max_columns: 3
     sections:
       - type: grid
         cards:
           - type: heading
-            heading: Main Heating
+            heading: Main Heating Control
           - type: thermostat
             entity: climate.hive_control
             name: Hive Heating
           - type: tile
             entity: sensor.outside_temperature
             name: Outside Temperature
+          - type: entities
+            title: Heating Actions
+            show_header_toggle: false
+            entities:
+              - entity: script.heating_start_boost
+                name: Start Boost
+              - entity: script.heating_cancel_boost
+                name: Cancel Boost
+              - entity: script.heating_clear_manual_mode
+                name: Return To Auto
       - type: grid
         cards:
           - type: heading
-            heading: Hot Water
+            heading: Hot Water Control
           - type: tile
             entity: water_heater.hive_control
             name: Base Hot Water Mode
@@ -96,191 +107,19 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Ground Floor
-          - type: history-graph
-            title: Mean Temperature (Utility, Hive, Dining)
-            hours_to_show: 24
-            entities:
-              - entity: sensor.ground_floor_avg_temperature
-                name: Mean temperature
-          - type: tile
-            entity: sensor.ground_floor_avg_temperature
-            name: Ground Floor Current
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: binary_sensor.heating_ground_floor_demand
-                state: "on"
-            card:
-              type: tile
-              entity: input_number.heating_target_ground_floor
-              name: Ground Floor Target
-              color: yellow
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: binary_sensor.heating_ground_floor_demand
-                state_not: "on"
-            card:
-              type: tile
-              entity: input_number.heating_target_ground_floor
-              name: Ground Floor Target
-      - type: grid
-        cards:
-          - type: heading
-            heading: Dining Room
-          - type: tile
-            entity: sensor.heating_dining_room_current_temperature
-            name: Dining Room Current
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: binary_sensor.heating_dining_room_demand
-                state: "on"
-            card:
-              type: tile
-              entity: input_number.heating_target_dining_room
-              name: Dining Room Target
-              color: yellow
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: binary_sensor.heating_dining_room_demand
-                state_not: "on"
-            card:
-              type: tile
-              entity: input_number.heating_target_dining_room
-              name: Dining Room Target
-      - type: grid
-        cards:
-          - type: heading
-            heading: First Floor
-          - type: history-graph
-            title: Mean Temperature (Master Bedroom 1–3)
-            hours_to_show: 24
-            entities:
-              - entity: sensor.first_floor_avg_temperature
-                name: Mean temperature
-          - type: tile
-            entity: sensor.first_floor_avg_temperature
-            name: First Floor Current
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: binary_sensor.heating_first_floor_demand
-                state: "on"
-            card:
-              type: tile
-              entity: input_number.heating_target_first_floor
-              name: First Floor Target
-              color: yellow
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: binary_sensor.heating_first_floor_demand
-                state_not: "on"
-            card:
-              type: tile
-              entity: input_number.heating_target_first_floor
-              name: First Floor Target
-      - type: grid
-        cards:
-          - type: heading
-            heading: Second Floor
-          - type: history-graph
-            title: Mean Temperature (Chris Room)
-            hours_to_show: 24
-            entities:
-              - entity: sensor.second_floor_avg_temperature
-                name: Mean temperature
-          - type: tile
-            entity: sensor.second_floor_avg_temperature
-            name: Second Floor Current
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: binary_sensor.heating_chris_room_demand
-                state: "on"
-            card:
-              type: tile
-              entity: input_number.heating_target_chris_room
-              name: Chris Room Target
-              color: yellow
-          - type: conditional
-            conditions:
-              - condition: state
-                entity: binary_sensor.heating_chris_room_demand
-                state_not: "on"
-            card:
-              type: tile
-              entity: input_number.heating_target_chris_room
-              name: Chris Room Target
-      - type: grid
-        cards:
-          - type: heading
-            heading: Heating Logic
+            heading: Zone Targets
           - type: entities
-            title: Mode and Conditions
             show_header_toggle: false
+            state_color: true
             entities:
-              - entity: sensor.heating_effective_mode
-                name: Effective Mode
-              - entity: sensor.heating_effective_mode_reason
-                name: Mode Reason
-              - entity: input_select.heating_manual_mode
-                name: Manual Mode
-              - entity: input_boolean.heating_policy_control_enabled
-                name: Repository Control Enabled
-              - entity: schedule.heating_weekly_mode
-                name: Weekly Schedule
-              - entity: timer.heating_boost
-                name: Boost Timer
-              - entity: binary_sensor.anyone_home
-                name: Anyone Home
-              - entity: binary_sensor.outside_warm_enough_for_heating_off
-                name: Outside Warm Enough
               - entity: input_number.heating_target_ground_floor
                 name: Ground Floor Target
-              - entity: binary_sensor.heating_ground_floor_demand
-                name: Ground Floor Heating
-                state_color: true
               - entity: input_number.heating_target_first_floor
                 name: First Floor Target
-              - entity: binary_sensor.heating_first_floor_demand
-                name: First Floor Heating
-                state_color: true
-              - entity: input_number.heating_target_chris_room
-                name: Chris Room Target
-              - entity: binary_sensor.heating_chris_room_demand
-                name: Chris Room Heating
-                state_color: true
               - entity: input_number.heating_target_dining_room
                 name: Dining Room Target
-              - entity: binary_sensor.heating_dining_room_demand
-                name: Dining Room Heating
-                state_color: true
-              - entity: input_boolean.heating_ground_floor_warm_weather_override
-                name: Ground Floor Override Cutoff
-              - entity: input_boolean.heating_first_floor_warm_weather_override
-                name: First Floor Override Cutoff
-              - entity: input_boolean.heating_chris_room_warm_weather_override
-                name: Chris Room Override Cutoff
-              - entity: input_boolean.heating_dining_room_warm_weather_override
-                name: Dining Room Override Cutoff
-              - entity: input_number.heating_outside_cutoff
-                name: Outside Cutoff
-              - entity: input_number.heating_freezing_cutoff
-                name: Freezing Cutoff
-          - type: entities
-            title: Heating Actions
-            show_header_toggle: false
-            entities:
-              - entity: script.heating_start_boost
-                name: Start Boost
-              - entity: script.heating_cancel_boost
-                name: Cancel Boost
-              - entity: script.heating_clear_manual_mode
-                name: Return To Auto
+              - entity: input_number.heating_target_chris_room
+                name: Second Floor Target
   - title: Automations
     path: automations
     type: sections

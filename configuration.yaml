@@ -33,6 +33,13 @@ lovelace:
       icon: mdi:server-network
       show_in_sidebar: true
       require_admin: true
+    repo-heating-monitor:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/heating_monitor.yaml
+      title: Heating Monitor
+      icon: mdi:radiator
+      show_in_sidebar: true
+      require_admin: false
     repo-energy:
       mode: yaml
       filename: repos/home-assistant-config/dashboards/energy.yaml
