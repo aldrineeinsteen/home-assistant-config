@@ -47,10 +47,13 @@ cat >/etc/logrotate.d/gt-be98 <<'EOF'
 }
 EOF
 
+busybox httpd -f -p 8099 -h /data/logs &
+HTTPD_PID=$!
+
 rsyslogd -n -f /etc/rsyslog.conf &
 RSYSLOG_PID=$!
 
-trap 'kill "$RSYSLOG_PID"; wait "$RSYSLOG_PID"' INT TERM
+trap 'kill "$HTTPD_PID" "$RSYSLOG_PID"; wait "$HTTPD_PID" "$RSYSLOG_PID"' INT TERM
 
 while kill -0 "$RSYSLOG_PID" 2>/dev/null; do
   /usr/local/bin/rotate.sh

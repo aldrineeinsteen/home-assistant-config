@@ -1,5 +1,5 @@
 name: Bounded Router Syslog
-version: "1.0.1"
+version: "1.0.2"
 slug: bounded_router_syslog
 description: Retains GT-BE98 diagnostic syslog with a source allowlist and a bounded disk footprint.
 arch:
@@ -10,6 +10,8 @@ arch:
 startup: services
 boot: auto
 init: false
+ingress: true
+ingress_port: 8099
 ports:
   5514/udp: 5514
 ports_description:
