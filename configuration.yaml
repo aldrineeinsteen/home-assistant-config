@@ -40,12 +40,12 @@ lovelace:
       icon: mdi:radiator
       show_in_sidebar: true
       require_admin: false
-    repo-energy:
+    dashboard-energy:
       mode: yaml
       filename: repos/home-assistant-config/dashboards/energy.yaml
-      title: Repository Energy
-      icon: mdi:test-tube
-      show_in_sidebar: false
+      title: Energy
+      icon: mdi:lightning-bolt
+      show_in_sidebar: true
       require_admin: true
     repo-map:
       mode: yaml
