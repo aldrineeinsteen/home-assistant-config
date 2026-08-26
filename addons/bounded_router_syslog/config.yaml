@@ -1,5 +1,5 @@
 name: Bounded Router Syslog
-version: "1.0.3"
+version: "1.0.4"
 slug: bounded_router_syslog
 description: Retains GT-BE98 diagnostic syslog with a source allowlist and a bounded disk footprint.
 arch:
