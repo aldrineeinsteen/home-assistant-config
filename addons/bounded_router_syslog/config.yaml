@@ -1,0 +1,20 @@
+name: Bounded Router Syslog
+version: "1.0.0"
+slug: bounded_router_syslog
+description: Retains GT-BE98 diagnostic syslog with a source allowlist and a bounded disk footprint.
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+startup: services
+boot: auto
+init: false
+ports:
+  5514/udp: 5514
+ports_description:
+  5514/udp: Router syslog (UDP)
+options:
+  router_ip: 192.168.100.1
+schema:
+  router_ip: str
