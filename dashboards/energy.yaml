@@ -1,40 +1,4 @@
 views:
-  - title: Heating Temperatures
-    path: heating-temperatures
-    icon: mdi:radiator
-    type: sections
-    max_columns: 3
-    sections:
-      - type: grid
-        cards:
-          - type: heading
-            heading: Ground Floor
-          - type: history-graph
-            title: Mean Temperature — 24 hours
-            hours_to_show: 24
-            entities:
-              - entity: sensor.ground_floor_avg_temperature
-                name: Mean temperature
-      - type: grid
-        cards:
-          - type: heading
-            heading: First Floor
-          - type: history-graph
-            title: Mean Temperature — 24 hours
-            hours_to_show: 24
-            entities:
-              - entity: sensor.first_floor_avg_temperature
-                name: Mean temperature
-      - type: grid
-        cards:
-          - type: heading
-            heading: Second Floor
-          - type: history-graph
-            title: Mean Temperature — 24 hours
-            hours_to_show: 24
-            entities:
-              - entity: sensor.second_floor_avg_temperature
-                name: Mean temperature
   - title: Overview
     path: energy-overview
     icon: mdi:home-lightning-bolt-outline
@@ -105,6 +69,29 @@ views:
             entity: >-
               sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_cost
             name: Gas Cost Yesterday
+      - type: heading
+        heading: Heating Temperature History
+        icon: mdi:radiator
+      - type: horizontal-stack
+        cards:
+          - type: history-graph
+            title: Ground Floor — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.ground_floor_avg_temperature
+                name: Mean temperature
+          - type: history-graph
+            title: First Floor — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.first_floor_avg_temperature
+                name: Mean temperature
+          - type: history-graph
+            title: Second Floor — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.second_floor_avg_temperature
+                name: Mean temperature
       - type: heading
         heading: Home Assistant Energy
         icon: mdi:chart-sankey
