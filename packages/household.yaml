@@ -155,6 +155,56 @@ template:
             else none
           }}
 
+      - name: Heating Utility Room Current Temperature
+        unique_id: heating_utility_room_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ is_number(state_attr('climate.radiator_valve_1_5', 'current_temperature')) }}
+        state: >
+          {{ state_attr('climate.radiator_valve_1_5', 'current_temperature') | float }}
+
+      - name: Heating Master Bedroom 2 Current Temperature
+        unique_id: heating_master_bedroom_2_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ is_number(state_attr('climate.radiator_valve_1_2', 'current_temperature')) }}
+        state: >
+          {{ state_attr('climate.radiator_valve_1_2', 'current_temperature') | float }}
+
+      - name: Heating Master Bedroom 3 Current Temperature
+        unique_id: heating_master_bedroom_3_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ is_number(state_attr('climate.radiator_valve_1_master_bedroom_3', 'current_temperature')) }}
+        state: >
+          {{ state_attr('climate.radiator_valve_1_master_bedroom_3', 'current_temperature') | float }}
+
+      - name: Heating Master Bedroom 1 Current Temperature
+        unique_id: heating_master_bedroom_1_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ is_number(state_attr('climate.master_bedroom_1', 'current_temperature')) }}
+        state: >
+          {{ state_attr('climate.master_bedroom_1', 'current_temperature') | float }}
+
+      - name: Heating Chris Room Current Temperature
+        unique_id: heating_chris_room_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ is_number(state_attr('climate.chris_bedroom_1', 'current_temperature')) }}
+        state: >
+          {{ state_attr('climate.chris_bedroom_1', 'current_temperature') | float }}
+
 group:
   family:
     name: Family

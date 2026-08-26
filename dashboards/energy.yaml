@@ -80,18 +80,30 @@ views:
             entities:
               - entity: sensor.ground_floor_avg_temperature
                 name: Mean temperature
+              - entity: sensor.heating_utility_room_current_temperature
+                name: Utility Room TRV
+              - entity: sensor.heating_dining_room_current_temperature
+                name: Dining Room TRV
           - type: history-graph
             title: First Floor — 24 hours
             hours_to_show: 24
             entities:
               - entity: sensor.first_floor_avg_temperature
                 name: Mean temperature
+              - entity: sensor.heating_master_bedroom_1_current_temperature
+                name: Master Bedroom 1 TRV
+              - entity: sensor.heating_master_bedroom_2_current_temperature
+                name: Master Bedroom 2 TRV
+              - entity: sensor.heating_master_bedroom_3_current_temperature
+                name: Master Bedroom 3 TRV
           - type: history-graph
             title: Second Floor — 24 hours
             hours_to_show: 24
             entities:
               - entity: sensor.second_floor_avg_temperature
                 name: Mean temperature
+              - entity: sensor.heating_chris_room_current_temperature
+                name: Chris Room TRV
       - type: heading
         heading: Home Assistant Energy
         icon: mdi:chart-sankey
