@@ -115,17 +115,27 @@ views:
                 name: Demand
       - type: grid
         cards:
-          - type: heading
-            heading: Second Floor
           - type: entities
+            title: Chris Room
             show_header_toggle: false
             state_color: true
             entities:
-              - entity: sensor.second_floor_avg_temperature
+              - entity: sensor.heating_chris_room_current_temperature
                 name: Current
               - entity: sensor.heating_chris_room_effective_target
                 name: Effective Target
               - entity: binary_sensor.heating_chris_room_demand
+                name: Demand
+          - type: entities
+            title: Keona Room
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.heating_keona_room_current_temperature
+                name: Current
+              - entity: sensor.heating_keona_room_effective_target
+                name: Effective Target
+              - entity: binary_sensor.heating_keona_room_demand
                 name: Demand
   - title: Diagnostics
     path: diagnostics
@@ -179,4 +189,6 @@ views:
               - entity: input_boolean.heating_dining_room_warm_weather_override
                 name: Dining Room Override
               - entity: input_boolean.heating_chris_room_warm_weather_override
-                name: Second Floor Override
+                name: Chris Room Override
+              - entity: input_boolean.heating_keona_room_warm_weather_override
+                name: Keona Room Override

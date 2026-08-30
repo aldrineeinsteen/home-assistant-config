@@ -98,9 +98,9 @@ Verify in this order:
    `/repo-devices/0`, `/repo-energy/0`, and `/repo-map/0`. The trailing `/0`
    selects the first view and is required on the audited Home Assistant version.
 3. `binary_sensor.anyone_home` reflects Aldrine, Evangeline, Chris, and Keona.
-4. Ground-floor, first-floor, and Chris-room temperatures are numeric or
+4. Ground-floor, first-floor, Chris-room, and Keona-room temperatures are numeric or
    unavailable—never a fabricated `0°C` for a failed source.
-5. Effective mode/reason, all three zone-demand sensors, boiler demand, active
+5. Effective mode/reason, all four zone-demand sensors, boiler demand, active
    zones, requested target, and lockout reason exist.
 6. `sensor.heating_boiler_lockout_reason` reports `control_disabled` and the
    repository control helper is off.

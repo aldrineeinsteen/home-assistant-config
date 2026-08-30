@@ -26,6 +26,15 @@ input_number:
     unit_of_measurement: "°C"
     icon: mdi:radiator
 
+  heating_target_keona_room:
+    name: Heating Target Keona Room
+    initial: 20
+    min: 15
+    max: 24
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:radiator
+
   heating_target_dining_room:
     name: Heating Target Dining Room
     initial: 22
@@ -64,6 +73,15 @@ input_number:
 
   heating_chris_room_frost_target:
     name: Heating Chris Room Frost Target
+    initial: 8
+    min: 5
+    max: 15
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:snowflake-thermometer
+
+  heating_keona_room_frost_target:
+    name: Heating Keona Room Frost Target
     initial: 8
     min: 5
     max: 15
@@ -176,6 +194,10 @@ input_boolean:
 
   heating_chris_room_warm_weather_override:
     name: Chris Room Override Warm-Weather Cutoff
+    icon: mdi:weather-sunny-alert
+
+  heating_keona_room_warm_weather_override:
+    name: Keona Room Override Warm-Weather Cutoff
     icon: mdi:weather-sunny-alert
 
   heating_dining_room_warm_weather_override:
@@ -399,6 +421,35 @@ template:
             {{ states('input_number.heating_target_chris_room') | float(20) }}
           {% endif %}
 
+      - name: Heating Keona Room Effective Target
+        unique_id: heating_keona_room_effective_target
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        icon: mdi:radiator
+        availability: >
+          {{
+            states('sensor.heating_effective_mode')
+              in ['Home', 'Sleep', 'Away', 'Holiday', 'Boost', 'Off']
+            and is_number(
+              states('input_number.heating_target_keona_room')
+            )
+            and is_number(states('input_number.heating_boost_target'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set scheduled =
+            state_attr('schedule.heating_weekly_mode', 'target') %}
+          {% if mode == 'Boost' %}
+            {{ states('input_number.heating_boost_target') | float(22) }}
+          {% elif mode in ['Home', 'Sleep']
+            and is_state('schedule.heating_weekly_mode', 'on')
+            and is_number(scheduled) %}
+            {{ [[scheduled | float, 15] | max, 24] | min }}
+          {% else %}
+            {{ states('input_number.heating_target_keona_room') | float(20) }}
+          {% endif %}
+
       - name: Heating Dining Room Current Temperature
         unique_id: heating_dining_room_current_temperature
         unit_of_measurement: "°C"
@@ -569,6 +620,51 @@ template:
           mode: "{{ states('sensor.heating_effective_mode') }}"
           hysteresis: "{{ states('input_number.heating_on_margin') }}"
 
+      - name: Heating Keona Room Demand
+        unique_id: heating_keona_room_demand
+        icon: mdi:radiator
+        availability: >
+          {{
+            is_number(
+              states('sensor.heating_keona_room_current_temperature')
+            )
+            and is_number(
+              states('sensor.heating_keona_room_effective_target')
+            )
+            and is_number(states('input_number.heating_on_margin'))
+          }}
+        state: >
+          {% set mode = states('sensor.heating_effective_mode') %}
+          {% set current_state =
+            states('sensor.heating_keona_room_current_temperature') %}
+          {% set target_state =
+            states('sensor.heating_keona_room_effective_target') %}
+          {% set margin_state =
+            states('input_number.heating_on_margin') %}
+          {% set current = current_state | float(0) %}
+          {% set target = target_state | float(0) %}
+          {% set hysteresis = margin_state | float(0.3) %}
+          {% if not (
+            is_number(current_state)
+            and is_number(target_state)
+            and is_number(margin_state)
+          ) %}
+            false
+          {% elif mode not in ['Home', 'Sleep', 'Boost'] %}
+            false
+          {% elif this.state == 'on' %}
+            {{ current < target + hysteresis }}
+          {% else %}
+            {{ current < target - hysteresis }}
+          {% endif %}
+        attributes:
+          current_temperature: >
+            {{ states('sensor.heating_keona_room_current_temperature') }}
+          target_temperature: >
+            {{ states('sensor.heating_keona_room_effective_target') }}
+          mode: "{{ states('sensor.heating_effective_mode') }}"
+          hysteresis: "{{ states('input_number.heating_on_margin') }}"
+
       - name: Heating Dining Room Demand
         unique_id: heating_dining_room_demand
         icon: mdi:radiator
@@ -622,9 +718,11 @@ template:
             and (unrestricted or is_state('input_boolean.heating_first_floor_warm_weather_override', 'on')) %}
           {% set chris_call = is_state('binary_sensor.heating_chris_room_demand', 'on')
             and (unrestricted or is_state('input_boolean.heating_chris_room_warm_weather_override', 'on')) %}
+          {% set keona_call = is_state('binary_sensor.heating_keona_room_demand', 'on')
+            and (unrestricted or is_state('input_boolean.heating_keona_room_warm_weather_override', 'on')) %}
           {% set dining_call = is_state('binary_sensor.heating_dining_room_demand', 'on')
             and (unrestricted or is_state('input_boolean.heating_dining_room_warm_weather_override', 'on')) %}
-          {{ frost or ground_call or first_call or chris_call or dining_call }}
+          {{ frost or ground_call or first_call or chris_call or keona_call or dining_call }}
         attributes:
           source: >
             {% set outside = states('sensor.outside_temperature') %}
@@ -663,6 +761,9 @@ template:
           {% if is_state('binary_sensor.heating_chris_room_demand', 'on') %}
             {% set zones = zones + ['chris_room'] %}
           {% endif %}
+          {% if is_state('binary_sensor.heating_keona_room_demand', 'on') %}
+            {% set zones = zones + ['keona_room'] %}
+          {% endif %}
           {% if is_state('binary_sensor.heating_dining_room_demand', 'on') %}
             {% set zones = zones + ['dining_room'] %}
           {% endif %}
@@ -684,6 +785,11 @@ template:
               {% set zones = zones + ['chris_room'] %}
             {% endif %}
             {% if not is_number(
+              states('sensor.heating_keona_room_current_temperature')
+            ) %}
+              {% set zones = zones + ['keona_room'] %}
+            {% endif %}
+            {% if not is_number(
               states('sensor.heating_dining_room_current_temperature')
             ) %}
               {% set zones = zones + ['dining_room'] %}
@@ -702,6 +808,9 @@ template:
             or is_number(states('sensor.first_floor_avg_temperature'))
             or is_number(
               states('sensor.chris_bedroom_current_temperature')
+            )
+            or is_number(
+              states('sensor.heating_keona_room_current_temperature')
             )
             or is_number(
               states('sensor.heating_dining_room_current_temperature')
@@ -785,6 +894,7 @@ template:
             is_state('binary_sensor.heating_ground_floor_demand', 'on')
             or is_state('binary_sensor.heating_first_floor_demand', 'on')
             or is_state('binary_sensor.heating_chris_room_demand', 'on')
+            or is_state('binary_sensor.heating_keona_room_demand', 'on')
             or is_state('binary_sensor.heating_dining_room_demand', 'on') %}
           {% set zone_call = zone_demand
             and is_state('binary_sensor.heating_boiler_demand', 'on') %}

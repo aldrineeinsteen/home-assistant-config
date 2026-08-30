@@ -139,21 +139,21 @@ template:
         unit_of_measurement: "°C"
         device_class: temperature
         state_class: measurement
-        # Keona's two bedroom TRVs will be added here once they are deployed.
         availability: >
-          {{
-            is_number(
-              state_attr('climate.chris_bedroom_1', 'current_temperature')
-            )
-          }}
+          {% set temps = [
+            state_attr('climate.chris_bedroom_1', 'current_temperature'),
+            state_attr('climate.keona_bedroom_1', 'current_temperature'),
+            state_attr('climate.keona_bedroom_2', 'current_temperature')
+          ] %}
+          {{ temps | select('number') | list | count > 0 }}
         state: >
-          {% set temperature =
-            state_attr('climate.chris_bedroom_1', 'current_temperature') %}
-          {{
-            temperature | float | round(1)
-            if is_number(temperature)
-            else none
-          }}
+          {% set temps = [
+            state_attr('climate.chris_bedroom_1', 'current_temperature'),
+            state_attr('climate.keona_bedroom_1', 'current_temperature'),
+            state_attr('climate.keona_bedroom_2', 'current_temperature')
+          ] %}
+          {% set valid = temps | select('number') | list %}
+          {{ (valid | sum / valid | count) | round(1) if valid | count > 0 else none }}
 
       - name: Heating Utility Room Current Temperature
         unique_id: heating_utility_room_current_temperature
@@ -204,6 +204,45 @@ template:
           {{ is_number(state_attr('climate.chris_bedroom_1', 'current_temperature')) }}
         state: >
           {{ state_attr('climate.chris_bedroom_1', 'current_temperature') | float }}
+
+      - name: Heating Keona Bedroom 1 Current Temperature
+        unique_id: heating_keona_bedroom_1_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ is_number(state_attr('climate.keona_bedroom_1', 'current_temperature')) }}
+        state: >
+          {{ state_attr('climate.keona_bedroom_1', 'current_temperature') | float }}
+
+      - name: Heating Keona Bedroom 2 Current Temperature
+        unique_id: heating_keona_bedroom_2_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {{ is_number(state_attr('climate.keona_bedroom_2', 'current_temperature')) }}
+        state: >
+          {{ state_attr('climate.keona_bedroom_2', 'current_temperature') | float }}
+
+      - name: Heating Keona Room Current Temperature
+        unique_id: heating_keona_room_current_temperature
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        availability: >
+          {% set temps = [
+            state_attr('climate.keona_bedroom_1', 'current_temperature'),
+            state_attr('climate.keona_bedroom_2', 'current_temperature')
+          ] %}
+          {{ temps | select('number') | list | count > 0 }}
+        state: >
+          {% set temps = [
+            state_attr('climate.keona_bedroom_1', 'current_temperature'),
+            state_attr('climate.keona_bedroom_2', 'current_temperature')
+          ] %}
+          {% set valid = temps | select('number') | list %}
+          {{ (valid | sum / valid | count) | round(1) if valid | count > 0 else none }}
 
 group:
   family:

@@ -103,10 +103,10 @@ use that behavior. Changes made from the UI remain effective until the next
 Home Assistant restart, when the version-controlled YAML default is applied
 again.
 
-The captured defaults are 20°C for the ground floor, first floor, and Chris
-room, 13°C for the outside warm-weather cutoff, and 6°C for the freezing
+The captured defaults are 20°C for the ground floor, first floor, Chris room,
+and Keona room, 13°C for the outside warm-weather cutoff, and 6°C for the freezing
 cutoff. The previously hardcoded defaults are 12°C for the away setback, 8°C
-for Chris room frost protection, and 0.3°C for demand hysteresis.
+for Chris and Keona room frost protection, and 0.3°C for demand hysteresis.
 
 ## Garden motion lighting
 
@@ -241,7 +241,7 @@ ended early with `script.heating_cancel_boost`; manual modes can be cleared with
 
 Away, Holiday, and Off suppress normal demand but do not suppress verified
 frost protection. Frost-only boiler demand uses the configured 12°C away
-setback rather than the high boiler-call temperature, while Chris room's TRV
+setback rather than the high boiler-call temperature, while Chris and Keona rooms' TRVs
 uses its configured frost target. If all indoor sensors are invalid, Boost is
 suppressed unless frost protection is required, in which case the lower away
 setback is used.
@@ -314,10 +314,10 @@ idempotent and receive at most one acknowledgement retry.
 
 ## Heating failure behavior
 
-The heating policy treats the ground floor, first floor, and Chris room
+The heating policy treats the ground floor, first floor, Chris room, and Keona room
 temperature sources independently. An unavailable or non-numeric source is
 excluded instead of being interpreted as `0°C`, so the remaining valid zones
-continue to control heating. When all three indoor sources are invalid, normal
+continue to control heating. When all four indoor sources are invalid, normal
 zone control pauses and a single persistent notification is created. Existing
 Hive state is left unchanged unless a valid outside temperature confirms that
 frost protection is required; in that degraded state, Hive uses the configured

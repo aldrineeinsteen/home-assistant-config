@@ -123,7 +123,9 @@ views:
               - entity: input_number.heating_target_dining_room
                 name: Dining Room Target
               - entity: input_number.heating_target_chris_room
-                name: Second Floor Target
+                name: Chris Room Target
+              - entity: input_number.heating_target_keona_room
+                name: Keona Room Target
           - type: entities
             title: Warm-Weather Overrides
             show_header_toggle: false
@@ -136,7 +138,9 @@ views:
               - entity: input_boolean.heating_dining_room_warm_weather_override
                 name: Dining Room Override
               - entity: input_boolean.heating_chris_room_warm_weather_override
-                name: Second Floor Override
+                name: Chris Room Override
+              - entity: input_boolean.heating_keona_room_warm_weather_override
+                name: Keona Room Override
   - title: Automations
     path: automations
     type: sections
