@@ -92,7 +92,7 @@ views:
             show_state: false
             tap_action:
               action: url
-              url_path: https://ha.lan/app/local_bounded_router_syslog
+              url_path: https://ha.lan/app/local_bounded_router_syslog?v=1.0.6
   - title: Heating
     path: heating
     icon: mdi:radiator
