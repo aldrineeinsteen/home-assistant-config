@@ -127,6 +127,34 @@ views:
                 name: Automatic Recovery
               - entity: script.hive_hub_restart
                 name: Restart Hub Now
+  - title: Bambu P1S
+    path: bambu-p1s
+    icon: mdi:printer-3d
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Bambu P1S
+            icon: mdi:printer-3d
+          - type: custom:ha-bambulab-print_status-card
+            printer: 01KP0N2JNB4EABS0EMNC73D2RE
+            custom_power: switch.bambu_p1s_socket_1
+      - type: grid
+        cards:
+          - type: heading
+            heading: Print Controls
+            icon: mdi:printer-3d-nozzle
+          - type: custom:ha-bambulab-print_control-card
+            printer: 01KP0N2JNB4EABS0EMNC73D2RE
+          - type: entities
+            title: Power
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: switch.bambu_p1s_socket_1
+                name: Printer Power
   - title: Services
     path: services
     icon: mdi:server-network

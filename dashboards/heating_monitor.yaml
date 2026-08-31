@@ -59,8 +59,63 @@ views:
                 name: Hot Water Bridge
               - entity: binary_sensor.hive_control_hotwater_state
                 name: Boiler Hot-Water Output
-  - title: Downstairs
-    path: downstairs
+      - type: grid
+        cards:
+          - type: heading
+            heading: Temperature History
+            icon: mdi:chart-line
+          - type: history-graph
+            title: Whole Home — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.ground_floor_avg_temperature
+                name: Ground Floor Mean
+              - entity: sensor.first_floor_avg_temperature
+                name: First Floor Mean
+              - entity: sensor.second_floor_avg_temperature
+                name: Second Floor Mean
+              - entity: sensor.heating_utility_room_current_temperature
+                name: Utility Room TRV
+              - entity: sensor.heating_dining_room_current_temperature
+                name: Dining Room TRV
+              - entity: sensor.heating_master_bedroom_1_current_temperature
+                name: Master Bedroom 1 TRV
+              - entity: sensor.heating_master_bedroom_2_current_temperature
+                name: Master Bedroom 2 TRV
+              - entity: sensor.heating_master_bedroom_3_current_temperature
+                name: Master Bedroom 3 TRV
+              - entity: sensor.heating_chris_room_current_temperature
+                name: Chris Room TRV
+              - entity: sensor.heating_keona_room_current_temperature
+                name: Keona Room Mean
+              - entity: sensor.heating_keona_bedroom_1_current_temperature
+                name: Keona Bedroom 1 TRV
+              - entity: sensor.heating_keona_bedroom_2_current_temperature
+                name: Keona Bedroom 2 TRV
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heating History
+            icon: mdi:fire-clock
+          - type: vertical-stack
+            cards:
+              - type: history-graph
+                title: Actual Heating — 24 hours
+                hours_to_show: 24
+                entities:
+                  - entity: climate.hive_control
+                    name: Heating Bridge
+              - type: entities
+                show_header_toggle: false
+                entities:
+                  - entity: sensor.heating_actual_on_time_last_24_hours
+                    name: Heating On Time
+                  - entity: input_text.heating_last_demand_source
+                    name: Last Demand Source
+                  - entity: input_datetime.heating_last_demand_started
+                    name: Demand Started
+  - title: Ground Floor
+    path: ground-floor
     icon: mdi:floor-plan
     type: sections
     max_columns: 3
@@ -93,8 +148,20 @@ views:
                 name: Effective Target
               - entity: binary_sensor.heating_dining_room_demand
                 name: Demand
-  - title: Upstairs
-    path: upstairs
+      - type: grid
+        cards:
+          - type: history-graph
+            title: Ground Floor — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.ground_floor_avg_temperature
+                name: Mean temperature
+              - entity: sensor.heating_utility_room_current_temperature
+                name: Utility Room TRV
+              - entity: sensor.heating_dining_room_current_temperature
+                name: Dining Room TRV
+  - title: First Floor
+    path: first-floor
     icon: mdi:home-floor-1
     type: sections
     max_columns: 3
@@ -116,7 +183,41 @@ views:
       - type: grid
         cards:
           - type: entities
-            title: Chris Room
+            title: Master Bedroom TRVs
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: sensor.heating_master_bedroom_1_current_temperature
+                name: Master Bedroom 1
+              - entity: sensor.heating_master_bedroom_2_current_temperature
+                name: Master Bedroom 2
+              - entity: sensor.heating_master_bedroom_3_current_temperature
+                name: Master Bedroom 3
+      - type: grid
+        cards:
+          - type: history-graph
+            title: First Floor — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.first_floor_avg_temperature
+                name: Mean temperature
+              - entity: sensor.heating_master_bedroom_1_current_temperature
+                name: Master Bedroom 1 TRV
+              - entity: sensor.heating_master_bedroom_2_current_temperature
+                name: Master Bedroom 2 TRV
+              - entity: sensor.heating_master_bedroom_3_current_temperature
+                name: Master Bedroom 3 TRV
+  - title: Second Floor
+    path: second-floor
+    icon: mdi:home-floor-2
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Chris Room
+          - type: entities
             show_header_toggle: false
             state_color: true
             entities:
@@ -126,8 +227,11 @@ views:
                 name: Effective Target
               - entity: binary_sensor.heating_chris_room_demand
                 name: Demand
+      - type: grid
+        cards:
+          - type: heading
+            heading: Keona Room
           - type: entities
-            title: Keona Room
             show_header_toggle: false
             state_color: true
             entities:
@@ -137,6 +241,22 @@ views:
                 name: Effective Target
               - entity: binary_sensor.heating_keona_room_demand
                 name: Demand
+      - type: grid
+        cards:
+          - type: history-graph
+            title: Second Floor — 24 hours
+            hours_to_show: 24
+            entities:
+              - entity: sensor.second_floor_avg_temperature
+                name: Mean temperature
+              - entity: sensor.heating_chris_room_current_temperature
+                name: Chris Room TRV
+              - entity: sensor.heating_keona_room_current_temperature
+                name: Keona Room Mean
+              - entity: sensor.heating_keona_bedroom_1_current_temperature
+                name: Keona Bedroom 1 TRV
+              - entity: sensor.heating_keona_bedroom_2_current_temperature
+                name: Keona Bedroom 2 TRV
   - title: Diagnostics
     path: diagnostics
     icon: mdi:stethoscope

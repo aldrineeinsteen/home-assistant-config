@@ -204,6 +204,19 @@ input_boolean:
     name: Dining Room Override Warm-Weather Cutoff
     icon: mdi:weather-sunny-alert
 
+input_text:
+  heating_last_demand_source:
+    name: Heating Last Demand Source
+    max: 255
+    icon: mdi:source-branch
+
+input_datetime:
+  heating_last_demand_started:
+    name: Heating Last Demand Started
+    has_date: true
+    has_time: true
+    icon: mdi:clock-start
+
 schedule:
   heating_weekly_mode:
     name: Heating Weekly Mode
@@ -250,6 +263,16 @@ timer:
     duration: "01:00:00"
     restore: true
     icon: mdi:timer-fire
+
+sensor:
+  - platform: history_stats
+    name: Heating Actual On Time Last 24 Hours
+    unique_id: heating_actual_on_time_last_24_hours
+    entity_id: climate.hive_control
+    state: "heat"
+    type: time
+    start: "{{ now() - timedelta(hours=24) }}"
+    end: "{{ now() }}"
 
 template:
   - binary_sensor:
@@ -1184,6 +1207,47 @@ script:
           option: "Auto"
 
 automation:
+  - alias: Heating - Record Demand Source
+    id: heating_record_demand_source
+    mode: queued
+    max: 5
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.heating_boiler_demand
+        to: "on"
+    action:
+      # Allow the zone summary template to settle before recording its snapshot.
+      - delay: "00:00:01"
+      - variables:
+          active_zones: "{{ states('sensor.heating_active_zones') }}"
+          outside: "{{ states('sensor.outside_temperature') }}"
+          freezing_cutoff: >
+            {{ states('input_number.heating_freezing_cutoff') }}
+          frost_protection: >
+            {{
+              is_number(outside)
+              and is_number(freezing_cutoff)
+              and outside | float <= freezing_cutoff | float
+            }}
+          source: >
+            {% if active_zones not in ['unknown', 'unavailable', 'none'] %}
+              {{ active_zones | replace('_', ' ') | title }}
+            {% elif frost_protection %}
+              Frost protection
+            {% else %}
+              Demand source unavailable
+            {% endif %}
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.heating_last_demand_source
+        data:
+          value: "{{ source }}"
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.heating_last_demand_started
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
   - alias: Heating - Cancel Boost When Manually Off
     id: heating_cancel_boost_when_manually_off
     mode: single

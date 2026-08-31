@@ -70,47 +70,6 @@ views:
               sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_cost
             name: Gas Cost Yesterday
       - type: heading
-        heading: Heating Temperature History
-        icon: mdi:radiator
-      - type: horizontal-stack
-        cards:
-          - type: history-graph
-            title: Ground Floor — 24 hours
-            hours_to_show: 24
-            entities:
-              - entity: sensor.ground_floor_avg_temperature
-                name: Mean temperature
-              - entity: sensor.heating_utility_room_current_temperature
-                name: Utility Room TRV
-              - entity: sensor.heating_dining_room_current_temperature
-                name: Dining Room TRV
-          - type: history-graph
-            title: First Floor — 24 hours
-            hours_to_show: 24
-            entities:
-              - entity: sensor.first_floor_avg_temperature
-                name: Mean temperature
-              - entity: sensor.heating_master_bedroom_1_current_temperature
-                name: Master Bedroom 1 TRV
-              - entity: sensor.heating_master_bedroom_2_current_temperature
-                name: Master Bedroom 2 TRV
-              - entity: sensor.heating_master_bedroom_3_current_temperature
-                name: Master Bedroom 3 TRV
-          - type: history-graph
-            title: Second Floor — 24 hours
-            hours_to_show: 24
-            entities:
-              - entity: sensor.second_floor_avg_temperature
-                name: Mean temperature
-              - entity: sensor.heating_chris_room_current_temperature
-                name: Chris Room TRV
-              - entity: sensor.heating_keona_room_current_temperature
-                name: Keona Room Mean
-              - entity: sensor.heating_keona_bedroom_1_current_temperature
-                name: Keona Bedroom 1 TRV
-              - entity: sensor.heating_keona_bedroom_2_current_temperature
-                name: Keona Bedroom 2 TRV
-      - type: heading
         heading: Home Assistant Energy
         icon: mdi:chart-sankey
       - type: energy-distribution

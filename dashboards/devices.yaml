@@ -27,6 +27,12 @@ views:
             icon: mdi:string-lights
             tap_action:
               action: toggle
+          - type: button
+            entity: switch.bambu_p1s_socket_1
+            name: Bambu P1S
+            icon: mdi:printer-3d
+            tap_action:
+              action: toggle
       - type: heading
         heading: Grow Setup
         icon: mdi:sprout
