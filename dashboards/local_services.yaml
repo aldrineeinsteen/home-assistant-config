@@ -139,7 +139,7 @@ views:
             heading: Bambu P1S
             icon: mdi:printer-3d
           - type: custom:ha-bambulab-print_status-card
-            printer: 01KP0N2JNB4EABS0EMNC73D2RE
+            printer: e1ffbcda639ecada51514d65e116da68
             custom_power: switch.bambu_p1s_socket_1
       - type: grid
         cards:
@@ -147,7 +147,7 @@ views:
             heading: Print Controls
             icon: mdi:printer-3d-nozzle
           - type: custom:ha-bambulab-print_control-card
-            printer: 01KP0N2JNB4EABS0EMNC73D2RE
+            printer: e1ffbcda639ecada51514d65e116da68
           - type: entities
             title: Power
             show_header_toggle: false
