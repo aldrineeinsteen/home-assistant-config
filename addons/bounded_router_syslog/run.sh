@@ -12,14 +12,6 @@ fi
 mkdir -p /data/logs /var/lib/rsyslog
 chmod 0750 /data/logs
 
-cat >/data/logs/index.html <<'EOF'
-<!doctype html><title>GT-BE98 syslog</title>
-<h1>GT-BE98 syslog</h1>
-<p><a href="current.txt">Current log</a></p>
-<p>Rotated archives are named <code>gt-be98.log-YYYYMMDD</code>, with older
-files compressed. Refresh this page after a rotation.</p>
-EOF
-
 ln -sf gt-be98.log /data/logs/current.txt
 
 cat >/etc/rsyslog.conf <<'EOF'

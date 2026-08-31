@@ -5,9 +5,10 @@ reboot. It accepts UDP syslog only from `router_ip` on port `5514` and writes
 to `/data/logs/gt-be98.log`.
 
 Open **Bounded Router Syslog** from Home Assistant's Apps page and choose
-**Open Web UI** to browse the current log and its rotated archives. The viewer
-is available only through Home Assistant ingress; it does not publish another
-LAN port.
+**Open Web UI** to browse the current log and its rotated archives. The index
+links every retained archive, including compressed older files. The viewer is
+available only through Home Assistant ingress; it does not publish another LAN
+port.
 
 Retention is daily with an early rotation at 25 MiB. The active log plus six
 archives provides up to seven days of history. A five-minute cap guard removes
