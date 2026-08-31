@@ -173,8 +173,6 @@ views:
                 name: Bed Target
               - entity: select.p1s_01p00c481000248_printing_speed
                 name: Printing Speed
-              - entity: switch.p1s_01p00c481000248_chamber_light
-                name: Chamber Light
               - entity: switch.p1s_01p00c481000248_camera
                 name: Camera
           - type: entities
