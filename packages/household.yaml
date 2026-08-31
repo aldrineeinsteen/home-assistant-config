@@ -17,14 +17,21 @@ template:
           {{
             is_number(outside_temp)
             and is_number(states('input_number.heating_outside_cutoff'))
+            and is_number(states('input_number.heating_outside_resume_cutoff'))
           }}
         state: >
           {% set outside_temp = states('sensor.outside_temperature') %}
+          {% set cutoff = states('input_number.heating_outside_cutoff') %}
+          {% set resume = states('input_number.heating_outside_resume_cutoff') %}
           {{
             is_number(outside_temp)
-            and is_number(states('input_number.heating_outside_cutoff'))
-            and outside_temp | float
-              >= states('input_number.heating_outside_cutoff') | float
+            and is_number(cutoff)
+            and is_number(resume)
+            and (
+              outside_temp | float > resume | float
+              if this.state == 'on'
+              else outside_temp | float >= cutoff | float
+            )
           }}
 
   - sensor:

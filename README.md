@@ -104,9 +104,10 @@ Home Assistant restart, when the version-controlled YAML default is applied
 again.
 
 The captured defaults are 20°C for the ground floor, first floor, Chris room,
-and Keona room, 13°C for the outside warm-weather cutoff, and 6°C for the freezing
-cutoff. The previously hardcoded defaults are 12°C for the away setback, 8°C
-for Chris and Keona room frost protection, and 0.3°C for demand hysteresis.
+and Keona room; 22°C for the Dining Room; 13°C for the outside warm-weather
+cutoff; 11°C for its resume cutoff; and 6°C for the freezing cutoff. The
+previously hardcoded defaults are 12°C for the away setback, 8°C for Chris and
+Keona room frost protection, and 0.3°C for demand hysteresis.
 
 ## Garden motion lighting
 
@@ -221,13 +222,11 @@ Off after a restart until it is explicitly returned to Auto. On a clean
 installation, Auto is the first option. Selecting Off cancels an active Boost,
 and the Boost start script refuses to start while Off is selected.
 
-`schedule.heating_weekly_mode` selects Sleep from midnight to 07:00 every day.
-Sleep uses the existing per-zone targets, so the default schedule changes the
-displayed mode but preserves the previous comfort behavior. Additional evening
-or daytime blocks can be added when the household schedule is known. A block
-may optionally add `target: 18`, or another value; scheduled targets are
-constrained to the existing 15–24°C safety range. When the schedule is inactive,
-an occupied home uses Home mode.
+`schedule.heating_weekly_mode` selects Sleep with an 18°C target from midnight
+to 07:00 every day. Additional evening or daytime blocks can be added when the
+household schedule is known. Scheduled targets are constrained to the existing
+15–24°C safety range (15–25°C for the Dining Room). When the schedule is
+inactive, an occupied home uses Home mode.
 
 Presence is stabilized before it affects heating: arrival must remain true for
 2 minutes and departure for 10 minutes. Both delays are adjustable helpers.
@@ -263,7 +262,7 @@ remains controlled by the zone targets and TRVs. Frost-only demand retains the
 lower away-setback target so cold-weather protection does not become an
 unconditional high-temperature boiler call.
 
-Each valid zone has an explicit demand binary sensor. Home, Sleep, and Boost
+Each of the five valid zones has an explicit demand binary sensor. Home, Sleep, and Boost
 modes make a zone eligible; Away, Holiday, and Off suppress normal zone demand.
 A zone starts requesting heat below `target - hysteresis` and keeps requesting
 until it reaches `target + hysteresis`. Invalid zones become unavailable and do
@@ -286,6 +285,8 @@ Dashboard and troubleshooting entities are:
 - `binary_sensor.heating_ground_floor_demand`
 - `binary_sensor.heating_first_floor_demand`
 - `binary_sensor.heating_chris_room_demand`
+- `binary_sensor.heating_keona_room_demand`
+- `binary_sensor.heating_dining_room_demand`
 - `binary_sensor.heating_boiler_demand`
 - `sensor.heating_active_zones`
 - `sensor.heating_requested_target`
@@ -298,26 +299,29 @@ dashboard export.
 
 The repository control helper defaults to off on a clean installation. This
 allows the complete configuration to be loaded and inspected without sending
-commands to Hive or any TRV. Turn it on only after the diagnostics and live
-entity mappings have been verified. Lockout reasons distinguish that
+commands to Hive or any TRV. The Heating Monitor shows both the toggle and
+`sensor.heating_repository_control_status`: `Control active` when commands can
+be sent, or `Monitoring only — commands blocked` otherwise. Turn the helper on
+only after the diagnostics and live entity mappings have been verified. Lockout reasons distinguish that
 shadow state (`control_disabled`), minimum-on/off timing, manual and presence
 modes, warm-weather cutoff, unavailable Hive control, invalid modes, all indoor
 sensors failing, and the ordinary absence of zone demand.
 
 The zone TRV manager applies the same policy to the Utility Room, both Master
-Bedroom TRVs, and Chris's room. A TRV is put into heat mode only while its zone
-has valid demand; it is explicitly turned off when satisfied, during the
-warm-weather cutoff, or when its normal mode is suppressed. In Away, Holiday,
-and Manual Off, a valid freezing outside temperature can still open an
-individual TRV at its configured frost target. Mode and target commands are
-idempotent and receive at most one acknowledgement retry.
+Bedroom TRVs, Chris's room, Keona's room, and the Dining Room. A TRV is put into
+heat mode only while its zone has valid demand; it is explicitly turned off when
+satisfied, during the warm-weather cutoff, or when its normal mode is
+suppressed. In Away, Holiday, and Manual Off, a valid freezing outside
+temperature can still open an individual TRV at its configured frost target.
+Mode and target commands are idempotent and receive at most one acknowledgement
+retry.
 
 ## Heating failure behavior
 
-The heating policy treats the ground floor, first floor, Chris room, and Keona room
-temperature sources independently. An unavailable or non-numeric source is
-excluded instead of being interpreted as `0°C`, so the remaining valid zones
-continue to control heating. When all four indoor sources are invalid, normal
+The heating policy treats the ground floor, first floor, Chris room, Keona room,
+and Dining Room temperature sources independently. An unavailable or non-numeric
+source is excluded instead of being interpreted as `0°C`, so the remaining valid
+zones continue to control heating. When all five indoor sources are invalid, normal
 zone control pauses and a single persistent notification is created. Existing
 Hive state is left unchanged unless a valid outside temperature confirms that
 frost protection is required; in that degraded state, Hive uses the configured
@@ -331,6 +335,12 @@ heating policy control is enabled and the reading has remained unavailable for
 15 minutes. It is dismissed when the reading recovers or policy control is
 disabled. Frost protection therefore runs only from a valid outside reading at
 or below the configured freezing cutoff.
+
+Normal heating stops when the outside temperature reaches the configured
+13°C warm-weather cutoff. It remains stopped until the temperature falls to the
+separate 11°C resume cutoff, avoiding repeated on/off changes while the weather
+hovers near the threshold. Both values are adjustable; the resume cutoff is
+limited below the shutoff threshold.
 
 Household presence includes Aldrine, Evangeline, Chris, and Keona.
 

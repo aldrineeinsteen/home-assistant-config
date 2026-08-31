@@ -53,6 +53,15 @@ input_number:
     unit_of_measurement: "°C"
     icon: mdi:thermometer-chevron-up
 
+  heating_outside_resume_cutoff:
+    name: Heating Outside Warm-Weather Resume Cutoff
+    initial: 11
+    min: 2
+    max: 12.5
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-chevron-down
+
   heating_freezing_cutoff:
     name: Heating Freezing Cutoff
     initial: 6
@@ -226,36 +235,43 @@ schedule:
         to: "07:00:00"
         data:
           mode: Sleep
+          target: 18
     tuesday:
       - from: "00:00:00"
         to: "07:00:00"
         data:
           mode: Sleep
+          target: 18
     wednesday:
       - from: "00:00:00"
         to: "07:00:00"
         data:
           mode: Sleep
+          target: 18
     thursday:
       - from: "00:00:00"
         to: "07:00:00"
         data:
           mode: Sleep
+          target: 18
     friday:
       - from: "00:00:00"
         to: "07:00:00"
         data:
           mode: Sleep
+          target: 18
     saturday:
       - from: "00:00:00"
         to: "07:00:00"
         data:
           mode: Sleep
+          target: 18
     sunday:
       - from: "00:00:00"
         to: "07:00:00"
         data:
           mode: Sleep
+          target: 18
 
 timer:
   heating_boost:
@@ -355,6 +371,16 @@ template:
             Weekly schedule selected Sleep
           {% else %}
             Stable presence selected Home
+          {% endif %}
+
+      - name: Heating Repository Control Status
+        unique_id: heating_repository_control_status
+        icon: mdi:shield-check-outline
+        state: >
+          {% if is_state('input_boolean.heating_policy_control_enabled', 'on') %}
+            Control active
+          {% else %}
+            Monitoring only — commands blocked
           {% endif %}
 
       - name: Heating Ground Floor Effective Target
@@ -754,7 +780,20 @@ template:
             {% set frost =
               is_number(outside) and is_number(freezing)
               and outside | float <= freezing | float %}
-            {% set zone_demand = is_state('binary_sensor.heating_boiler_demand', 'on') %}
+            {% set mode = states('sensor.heating_effective_mode') %}
+            {% set unrestricted = mode == 'Boost' or not is_state(
+              'binary_sensor.outside_warm_enough_for_heating_off', 'on') %}
+            {% set zone_demand =
+              (is_state('binary_sensor.heating_ground_floor_demand', 'on')
+                and (unrestricted or is_state('input_boolean.heating_ground_floor_warm_weather_override', 'on')))
+              or (is_state('binary_sensor.heating_first_floor_demand', 'on')
+                and (unrestricted or is_state('input_boolean.heating_first_floor_warm_weather_override', 'on')))
+              or (is_state('binary_sensor.heating_chris_room_demand', 'on')
+                and (unrestricted or is_state('input_boolean.heating_chris_room_warm_weather_override', 'on')))
+              or (is_state('binary_sensor.heating_keona_room_demand', 'on')
+                and (unrestricted or is_state('input_boolean.heating_keona_room_warm_weather_override', 'on')))
+              or (is_state('binary_sensor.heating_dining_room_demand', 'on')
+                and (unrestricted or is_state('input_boolean.heating_dining_room_warm_weather_override', 'on'))) %}
             {% if frost and zone_demand %}
               zone_and_frost
             {% elif frost %}
@@ -1220,20 +1259,25 @@ automation:
       - delay: "00:00:01"
       - variables:
           active_zones: "{{ states('sensor.heating_active_zones') }}"
-          outside: "{{ states('sensor.outside_temperature') }}"
-          freezing_cutoff: >
-            {{ states('input_number.heating_freezing_cutoff') }}
-          frost_protection: >
-            {{
-              is_number(outside)
-              and is_number(freezing_cutoff)
-              and outside | float <= freezing_cutoff | float
-            }}
+          demand_source: >
+            {{ state_attr('binary_sensor.heating_boiler_demand', 'source') }}
           source: >
-            {% if active_zones not in ['unknown', 'unavailable', 'none'] %}
-              {{ active_zones | replace('_', ' ') | title }}
-            {% elif frost_protection %}
+            {% if demand_source == 'zone_and_frost' %}
+              {% if active_zones not in ['unknown', 'unavailable', 'none'] %}
+                {{ active_zones | replace('_', ' ') | title }} + Frost protection
+              {% else %}
+                Zone demand + Frost protection
+              {% endif %}
+            {% elif demand_source == 'zone_demand' %}
+              {% if active_zones not in ['unknown', 'unavailable', 'none'] %}
+                {{ active_zones | replace('_', ' ') | title }}
+              {% else %}
+                Zone demand
+              {% endif %}
+            {% elif demand_source == 'frost_protection' %}
               Frost protection
+            {% elif active_zones not in ['unknown', 'unavailable', 'none'] %}
+              {{ active_zones | replace('_', ' ') | title }}
             {% else %}
               Demand source unavailable
             {% endif %}

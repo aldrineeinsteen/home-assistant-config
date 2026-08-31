@@ -215,17 +215,20 @@
     first_floor_temp: "{{ states('sensor.first_floor_avg_temperature') }}"
     chris_temp: "{{ states('sensor.chris_bedroom_current_temperature') }}"
     keona_temp: "{{ states('sensor.heating_keona_room_current_temperature') }}"
+    dining_temp: "{{ states('sensor.heating_dining_room_current_temperature') }}"
 
     ground_floor_temp_valid: "{{ is_number(ground_floor_temp) }}"
     first_floor_temp_valid: "{{ is_number(first_floor_temp) }}"
     chris_temp_valid: "{{ is_number(chris_temp) }}"
     keona_temp_valid: "{{ is_number(keona_temp) }}"
+    dining_temp_valid: "{{ is_number(dining_temp) }}"
     indoor_temperature_available: >
       {{
         ground_floor_temp_valid
         or first_floor_temp_valid
         or chris_temp_valid
         or keona_temp_valid
+        or dining_temp_valid
       }}
     hvac_mode: >
       {% if boiler_lockout_reason in
@@ -302,7 +305,7 @@
                         notification_id: heating_indoor_temperature_unavailable
                         title: Heating indoor temperatures unavailable
                         message: >
-                          Ground floor, first floor, Chris room, and Keona room temperature
+                          Ground floor, first floor, Chris room, Keona room, and Dining Room temperature
                           sources are unavailable. Normal zone control is paused.
                           Frost protection remains active only when the outside
                           temperature is valid and at or below the freezing cutoff.

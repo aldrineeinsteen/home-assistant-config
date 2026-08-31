@@ -98,12 +98,13 @@ Verify in this order:
    `/repo-devices/0`, `/repo-energy/0`, and `/repo-map/0`. The trailing `/0`
    selects the first view and is required on the audited Home Assistant version.
 3. `binary_sensor.anyone_home` reflects Aldrine, Evangeline, Chris, and Keona.
-4. Ground-floor, first-floor, Chris-room, and Keona-room temperatures are numeric or
-   unavailable—never a fabricated `0°C` for a failed source.
-5. Effective mode/reason, all four zone-demand sensors, boiler demand, active
+4. Ground-floor, first-floor, Chris-room, Keona-room, and Dining-Room temperatures are
+   numeric or unavailable—never a fabricated `0°C` for a failed source.
+5. Effective mode/reason, all five zone-demand sensors, boiler demand, active
    zones, requested target, and lockout reason exist.
-6. `sensor.heating_boiler_lockout_reason` reports `control_disabled` and the
-   repository control helper is off.
+6. `sensor.heating_boiler_lockout_reason` reports `control_disabled`, the
+   repository control helper is off, and the control-status sensor reports
+   `Monitoring only — commands blocked`.
 7. The baseline lighting, seed-rack, Hive restart, and Ring automations exist
    once. Heating Boiler Demand Policy and Heating Zone TRV Manager are enabled
    and are not duplicated.
@@ -120,17 +121,18 @@ true:
 
 - `climate.hive_control` and the intended TRVs are available;
 - the room entity mappings have been physically confirmed;
-- the effective mode, targets, outside cutoff, demand sensors, requested
+- the effective mode, targets (including the 18°C Sleep target), 13°C shutoff /
+  11°C resume outside cutoffs, demand sensors, requested
   target, and active zones are plausible;
 - there are no duplicate legacy heating automations; and
 - Home Assistant logs are clean after the shadow restart.
 
 Enabling the helper triggers both heating policies immediately. Watch the Hive
 HVAC mode, requested target, active zones, and lockout reason through at least
-one on/off decision. Verify that the Utility Room, both Master Bedroom TRVs, and
-Chris's TRV are off when their zones do not demand heat and enter heat mode only
-for valid normal or frost demand. Commands are idempotent and use a single
-bounded retry.
+one on/off decision. Verify that the Utility Room, both Master Bedroom TRVs,
+Chris's TRV, Keona's TRVs, and the Dining Room TRV are off when their zones do
+not demand heat and enter heat mode only for valid normal or frost demand.
+Commands are idempotent and use a single bounded retry.
 
 If a device or mapping remains unavailable, leave the helper off. The rest of
 the repository configuration can remain active safely while the integration is

@@ -18,6 +18,10 @@ views:
                 name: Effective Mode
               - entity: sensor.heating_effective_mode_reason
                 name: Mode Reason
+              - entity: input_boolean.heating_policy_control_enabled
+                name: Repository Control Enabled
+              - entity: sensor.heating_repository_control_status
+                name: Control Status
               - entity: binary_sensor.heating_boiler_demand
                 name: Boiler Demand
               - entity: sensor.heating_active_zones
@@ -278,6 +282,8 @@ views:
                 name: Weekly Schedule
               - entity: input_number.heating_outside_cutoff
                 name: Outside Cutoff
+              - entity: input_number.heating_outside_resume_cutoff
+                name: Outside Resume Cutoff
               - entity: input_number.heating_freezing_cutoff
                 name: Freezing Cutoff
       - type: grid
