@@ -22,9 +22,9 @@ lovelace:
     repo-devices:
       mode: yaml
       filename: repos/home-assistant-config/dashboards/devices.yaml
-      title: Repository Devices
-      icon: mdi:test-tube
-      show_in_sidebar: false
+      title: Devices
+      icon: mdi:power-plug
+      show_in_sidebar: true
       require_admin: true
     repo-local-services:
       mode: yaml
