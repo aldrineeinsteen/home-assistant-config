@@ -18,18 +18,16 @@ views:
                 name: Effective Mode
               - entity: sensor.heating_effective_mode_reason
                 name: Mode Reason
-              - entity: input_boolean.heating_policy_control_enabled
-                name: Repository Control Enabled
               - entity: sensor.heating_repository_control_status
                 name: Control Status
               - entity: binary_sensor.heating_boiler_demand
                 name: Boiler Demand
               - entity: sensor.heating_active_zones
                 name: Active Zones
-              - entity: sensor.heating_boiler_lockout_reason
-                name: Boiler Lockout Reason
               - entity: sensor.heating_requested_target
                 name: Requested Target
+              - entity: sensor.heating_boiler_lockout_reason
+                name: Boiler Lockout Reason
       - type: grid
         cards:
           - type: heading
@@ -50,7 +48,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Hive
+            heading: Bridge Health
           - type: entities
             show_header_toggle: false
             state_color: true
@@ -63,10 +61,110 @@ views:
                 name: Hot Water Bridge
               - entity: binary_sensor.hive_control_hotwater_state
                 name: Boiler Hot-Water Output
+  - title: Actions
+    path: actions
+    icon: mdi:gesture-tap-button
+    type: sections
+    max_columns: 3
+    sections:
       - type: grid
         cards:
           - type: heading
-            heading: Temperature History
+            heading: Heating Controls
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: input_boolean.heating_policy_control_enabled
+                name: Repository Control Enabled
+              - entity: input_select.heating_manual_mode
+                name: Manual Mode
+              - entity: schedule.heating_weekly_mode
+                name: Weekly Schedule
+              - entity: script.heating_start_boost
+                name: Start Boost
+              - entity: script.heating_cancel_boost
+                name: Cancel Boost
+              - entity: script.heating_clear_manual_mode
+                name: Return To Auto
+      - type: grid
+        cards:
+          - type: heading
+            heading: Overrides
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: input_boolean.heating_ground_floor_warm_weather_override
+                name: Ground Floor Override
+              - entity: input_boolean.heating_first_floor_warm_weather_override
+                name: First Floor Override
+              - entity: input_boolean.heating_dining_room_warm_weather_override
+                name: Dining Room Override
+              - entity: input_boolean.heating_chris_room_warm_weather_override
+                name: Chris Room Override
+              - entity: input_boolean.heating_keona_room_warm_weather_override
+                name: Keona Room Override
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hot Water
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: script.hot_water_boost_30_minutes
+                name: Boost 30 Minutes
+              - entity: script.hot_water_boost_60_minutes
+                name: Boost 60 Minutes
+              - entity: script.hot_water_boost_120_minutes
+                name: Boost 120 Minutes
+              - entity: script.hot_water_cancel_boost
+                name: Cancel Boost
+  - title: Diagnostics
+    path: diagnostics
+    icon: mdi:stethoscope
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Policy
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.heating_policy_control_enabled
+                name: Repository Control Enabled
+              - entity: input_select.heating_manual_mode
+                name: Manual Mode
+              - entity: schedule.heating_weekly_mode
+                name: Weekly Schedule
+              - entity: input_number.heating_outside_cutoff
+                name: Outside Cutoff
+              - entity: input_number.heating_outside_resume_cutoff
+                name: Outside Resume Cutoff
+              - entity: input_number.heating_freezing_cutoff
+                name: Freezing Cutoff
+      - type: grid
+        cards:
+          - type: heading
+            heading: Boiler Timing
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - entity: input_number.heating_boiler_call_temperature
+                name: Boiler Call Temperature
+              - entity: input_number.heating_minimum_boiler_on_minutes
+                name: Minimum On Time
+              - entity: input_number.heating_minimum_boiler_off_minutes
+                name: Minimum Off Time
+              - entity: input_number.heating_hive_acknowledgement_tolerance
+                name: Hive Acknowledgement Tolerance
+      - type: grid
+        cards:
+          - type: heading
+            heading: History
             icon: mdi:chart-line
           - type: history-graph
             title: Whole Home — 24 hours
@@ -99,7 +197,7 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Heating History
+            heading: Runtime
             icon: mdi:fire-clock
           - type: vertical-stack
             cards:

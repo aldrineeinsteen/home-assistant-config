@@ -1,0 +1,98 @@
+schema_version: 1
+inventory_name: known-good-entity-map
+last_reviewed: "2026-09-11"
+source: version-controlled Home Assistant repo
+
+notes:
+  - This map is a maintenance aid for the critical dashboards and control surfaces.
+  - It is meant to keep the repo stable across Home Assistant restarts and UI-managed device renames.
+  - Update only when a fixture, entity ID, or device mapping has been verified in the live instance.
+
+critical_dashboards:
+  home:
+    dashboard_file: dashboards/overview.yaml
+    title: Home
+    canonical_entities:
+      people:
+        - person.aldrine_einsteen
+        - person.evangeline_aldrine
+      weather:
+        - weather.forecast_home
+      main_heating:
+        - climate.hive_control
+      first_floor_average:
+        - sensor.first_floor_avg_temperature
+      front_door_camera:
+        - camera.front_door_live_view
+      garden_camera:
+        - camera.garden_live_view
+
+  heating_monitor:
+    dashboard_file: dashboards/heating_monitor.yaml
+    title: Heating Monitor
+    canonical_entities:
+      effective_mode:
+        - sensor.heating_effective_mode
+      mode_reason:
+        - sensor.heating_effective_mode_reason
+      control_status:
+        - sensor.heating_repository_control_status
+      boiler_demand:
+        - binary_sensor.heating_boiler_demand
+      active_zones:
+        - sensor.heating_active_zones
+      requested_target:
+        - sensor.heating_requested_target
+      lockout_reason:
+        - sensor.heating_boiler_lockout_reason
+      outside_temperature:
+        - sensor.outside_temperature
+      anyone_home:
+        - binary_sensor.anyone_home
+      occupancy_stable:
+        - binary_sensor.heating_occupancy_stable
+      bridge_available:
+        - binary_sensor.hive_control_available
+      heating_bridge:
+        - climate.hive_control
+      hot_water_bridge:
+        - water_heater.hive_control
+
+  local_services:
+    dashboard_file: dashboards/local_services.yaml
+    title: Local Services
+    canonical_entities:
+      pi_hole_health:
+        - sensor.pi_hole_health
+      wireguard_health:
+        - sensor.wireguard_health
+      router_health:
+        - sensor.asus_router_health
+      hive_hub_health:
+        - sensor.hive_hub_health
+      omv_health:
+        - sensor.omv_storage_health
+      jellyfin_health:
+        - sensor.jellyfin_health
+
+  energy:
+    dashboard_file: dashboards/energy.yaml
+    title: Energy
+    canonical_entities:
+      electricity_rate:
+        - sensor.octopus_energy_electricity_22l4538283_1023542710990_current_rate
+      gas_rate:
+        - sensor.octopus_energy_gas_e6e12701832423_7436504601_current_rate
+      electricity_cost_yesterday:
+        - sensor.octopus_energy_electricity_22l4538283_1023542710990_previous_accumulative_cost
+      gas_cost_yesterday:
+        - sensor.octopus_energy_gas_e6e12701832423_7436504601_previous_accumulative_cost
+
+helper_alias_policy:
+  preferred_pattern: "stable canonical entity names live in the Home Assistant package layer where available; dashboard references should stay constant and not depend on UI-generated names."
+  accepted_fallbacks:
+    - Use a template sensor or helper if a naming migration is required.
+    - Prefer keeping the dashboard reference to a stable device-level entity instead of a transient state entity.
+  do_not_use:
+    - Browser-only dashboard state as a source of truth for device mapping.
+    - Unverified entity IDs copied from a stale export without a live check.

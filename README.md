@@ -63,7 +63,7 @@ sensitive and unreliable copy of `.storage`.
 The four dashboards registered on the Raspberry Pi were exported through Home
 Assistant's read-only dashboard editor and converted to normal YAML files:
 
-- `dashboards/overview.yaml` — Overview, shown in the sidebar.
+- `dashboards/overview.yaml` — Home, shown in the sidebar.
 - `dashboards/devices.yaml` — Devices, shown in the sidebar.
 - `dashboards/energy.yaml` — Energy, shown in the sidebar.
 - `dashboards/map.yaml` — Map, hidden from the sidebar.
@@ -76,6 +76,11 @@ dashboards remain available for rollback; the user's frontend preference makes
 Home the default and hides the old Overview shortcut. The Map dashboard's
 `strategy: map` definition remains auto-generated from the entities available
 on each installation.
+
+The repository keeps a current map of the known-good entity IDs used by the
+critical dashboards in `inventory/known-good-entity-map.yaml` so the Home,
+Heating Monitor, Local Services, and Energy dashboards remain stable across
+reboots and device renames.
 
 Open the first view at `/repo-overview/0`, `/repo-devices/0`,
 `/repo-energy/0`, or `/repo-map/0`. On this Home Assistant version, the bare
@@ -150,9 +155,9 @@ weekends, and 17:30 to 18:15 every day. At every other time Home Assistant
 turns the water heater off. The schedule is also applied on Home Assistant
 startup, so a restart cannot leave hot water permanently on.
 
-The Heating view on the Overview dashboard offers 30-, 60-, and 120-minute
-Hive boosts plus a cancel action. Hive tracks the timed boost and returns to
-the current water-heater mode when it expires; the weekly schedule remains
+The Heating view on the Home dashboard offers 30-, 60-, and 120-minute Hive
+boosts plus a cancel action. Hive tracks the timed boost and returns to the
+current water-heater mode when it expires; the weekly schedule remains
 responsible for the normal on/off windows.
 
 ## Hive Hub recovery
@@ -293,8 +298,8 @@ Dashboard and troubleshooting entities are:
 - `sensor.heating_boiler_lockout_reason`
 - `input_boolean.heating_policy_control_enabled`
 
-The Overview dashboard uses these current policy entities and no longer points
-to the superseded turn-on/turn-off automation IDs from the original live
+The Home dashboard uses these current policy entities and no longer points to
+the superseded turn-on/turn-off automation IDs from the original live
 dashboard export.
 
 The repository control helper defaults to off on a clean installation. This

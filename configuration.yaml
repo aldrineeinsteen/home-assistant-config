@@ -15,7 +15,7 @@ lovelace:
     repo-overview:
       mode: yaml
       filename: repos/home-assistant-config/dashboards/overview.yaml
-      title: Overview
+      title: Home
       icon: mdi:home
       show_in_sidebar: true
       require_admin: false
