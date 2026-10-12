@@ -1,0 +1,163 @@
+schema_version: 1
+audited_at: "2026-07-22"
+source: ha.lan
+access: read-only
+home_assistant_version: "2026.7.2"
+
+# This is a sanitized restoration checklist, not an importable Home Assistant
+# configuration file. Credentials, unique device data, and .storage contents are
+# intentionally absent.
+portable_yaml:
+  top_level:
+    - configuration.yaml
+    - automations.yaml
+    - scripts.yaml
+    - scenes.yaml
+  excluded_secret_file:
+    - secrets.yaml
+  blueprints:
+    - blueprints/automation/homeassistant/motion_light.yaml
+    - blueprints/automation/homeassistant/notify_leaving_zone.yaml
+    - blueprints/script/homeassistant/confirmable_notification.yaml
+    - blueprints/template/homeassistant/inverted_binary_sensor.yaml
+  additional_live_yaml: []
+
+dashboards:
+  - title: Overview
+    live_path: lovelace
+    repository_file: dashboards/overview.yaml
+    views: 3
+    sidebar: true
+  - title: Devices
+    live_path: dashboard-devices
+    repository_file: dashboards/devices.yaml
+    views: 1
+    sidebar: true
+  - title: Energy
+    live_path: dashboard-energy
+    repository_file: dashboards/energy.yaml
+    views: 3
+    sidebar: true
+  - title: Map
+    live_path: map
+    repository_path: dashboard-map
+    repository_file: dashboards/map.yaml
+    strategy: map
+    sidebar: false
+
+ui_managed_integrations:
+  - analytics
+  - backup
+  - bambu_lab
+  - bluetooth
+  - cast
+  - dlna_dms
+  - go2rtc
+  - google_translate
+  - hacs
+  - hassio
+  - hive
+  - homekit_controller
+  - ipp
+  - matter
+  - met
+  - mobile_app
+  - octopus_energy
+  - openmediavault
+  - pi_hole
+  - radio_browser
+  - raspberry_pi
+  - ring
+  - rpi_power
+  - shopping_list
+  - sun
+  - tuya
+  - upnp
+
+custom_integrations:
+  - domain: bambu_lab
+    version: "2.2.22"
+    repository: greghesp/ha-bambulab
+  - domain: hacs
+    version: "2.0.5"
+    repository: hacs/integration
+  - domain: octopus_energy
+    version: "18.3.3"
+    repository: BottlecapDave/HomeAssistant-OctopusEnergy
+  - domain: openmediavault
+    version: "0.0.0"
+    repository: tomae/homeassistant-openmediavault
+
+lovelace_resources:
+  - url: /bambu_lab/ha-bambu-lab-cards.js?v=2.6.51
+    type: module
+    source: greghesp/ha-bambulab
+
+addons:
+  - name: Matter Server
+    slug: core_matter_server
+    version: "9.1.0"
+    observed_state: started
+  - name: File editor
+    slug: core_configurator
+    version: "5.8.0"
+    observed_state: started
+  - name: Duck DNS
+    slug: core_duckdns
+    version: "2.0.0"
+    observed_state: started
+  - name: Advanced SSH & Web Terminal
+    slug: a0d7b954_ssh
+    version: "20.0.1"
+    observed_state: started
+  - name: Terminal & SSH
+    slug: core_ssh
+    version: "10.3.0"
+    observed_state: started
+
+sidebar_features:
+  default_config:
+    - Activity
+    - History
+    - Calendar
+    - Media
+    - To-do lists
+  addons:
+    - File editor
+    - Terminal
+  custom:
+    - HACS
+
+ui_managed_state_categories:
+  - authentication and users
+  - areas, floors, labels, and categories
+  - devices and entities
+  - integration config entries and credentials
+  - people and zones
+  - energy and Octopus runtime data
+  - HomeKit controller pairing data
+  - dashboard registrations and resources
+  - add-on configuration
+  - restore state, traces, repairs, and onboarding state
+
+coverage:
+  live_portable_yaml: tracked
+  reusable_heating_policy: tracked_and_newer_than_live
+  reusable_tariff_defaults: tracked
+  dashboards: tracked
+  blueprints: tracked
+  hacs_components: sanitized_inventory_only
+  ui_managed_integrations: sanitized_inventory_only
+  addons: sanitized_inventory_only
+  credentials_and_secrets: deliberately_excluded
+  device_and_entity_registries: deliberately_excluded
+  database_logs_backups_and_runtime_state: deliberately_excluded
+
+notes:
+  - The repository is an overlay and reproducible policy source, not a complete
+    disk image of the Raspberry Pi.
+  - UI-managed integrations and add-ons must be installed or restored before
+    entity IDs referenced by the YAML can become available.
+  - The repository heating package intentionally supersedes the five live
+    input_number helpers with a complete version-controlled helper set.
+  - No UI-created helper storage files were present during the audit.

@@ -1,0 +1,69 @@
+template:
+  - sensor:
+      - name: "OMV Data Available"
+        unique_id: omv_data_available
+        icon: mdi:database-arrow-down
+        unit_of_measurement: "GiB"
+        state_class: measurement
+        availability: >
+          {{
+            is_number(
+              state_attr('sensor.omv_filesystem_md0', 'available')
+            )
+          }}
+        state: >
+          {{
+            state_attr('sensor.omv_filesystem_md0', 'available')
+            | float(0)
+            | round(1)
+          }}
+
+      - name: "OMV Storage Health"
+        unique_id: omv_storage_health
+        icon: mdi:server-heart
+        state: >
+          {% set filesystem = 'sensor.omv_filesystem_md0' %}
+          {% set used = states(filesystem) %}
+          {% set available = state_attr(filesystem, 'available') %}
+          {% set mounted = state_attr(filesystem, 'mounted') %}
+          {% set readonly = state_attr(filesystem, '_readonly') %}
+          {% set prop_readonly = state_attr(filesystem, 'propreadonly') %}
+          {% set disk_temperatures = [
+            states('sensor.omv_disk_sda'),
+            states('sensor.omv_disk_sdb'),
+            states('sensor.omv_disk_sdc'),
+            states('sensor.omv_disk_sdd'),
+            states('sensor.omv_disk_sde')
+          ] %}
+          {% set disks_available =
+            is_number(disk_temperatures[0])
+            and is_number(disk_temperatures[1])
+            and is_number(disk_temperatures[2])
+            and is_number(disk_temperatures[3])
+            and is_number(disk_temperatures[4])
+          %}
+          {% if
+            not is_number(used)
+            or not is_number(available)
+            or mounted is none
+            or not disks_available
+          %}
+            Unavailable
+          {% elif not mounted or readonly or prop_readonly %}
+            Filesystem problem
+          {% elif
+            disk_temperatures
+            | map('float', 0)
+            | max
+            >= 55
+          %}
+            Temperature warning
+          {% elif used | float(0) >= 85 %}
+            Capacity warning
+          {% else %}
+            Healthy
+          {% endif %}
+        attributes:
+          capacity_warning_threshold: "85%"
+          temperature_warning_threshold: "55°C"
+          filesystem: "md0"

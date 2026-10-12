@@ -1,0 +1,60 @@
+# Production bootstrap for a checkout at:
+# /config/repos/home-assistant-config
+
+# Loads the standard Home Assistant integrations. Do not remove.
+default_config:
+
+homeassistant:
+  packages: !include_dir_named repos/home-assistant-config/packages
+
+frontend:
+  themes: !include_dir_merge_named repos/home-assistant-config/themes
+
+lovelace:
+  dashboards:
+    repo-overview:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/overview.yaml
+      title: Home
+      icon: mdi:home
+      show_in_sidebar: true
+      require_admin: false
+    repo-devices:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/devices.yaml
+      title: Devices
+      icon: mdi:power-plug
+      show_in_sidebar: true
+      require_admin: true
+    repo-local-services:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/local_services.yaml
+      title: Local Services
+      icon: mdi:server-network
+      show_in_sidebar: true
+      require_admin: true
+    repo-heating-monitor:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/heating_monitor.yaml
+      title: Heating Monitor
+      icon: mdi:radiator
+      show_in_sidebar: true
+      require_admin: false
+    dashboard-energy:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/energy.yaml
+      title: Energy
+      icon: mdi:lightning-bolt
+      show_in_sidebar: true
+      require_admin: true
+    repo-map:
+      mode: yaml
+      filename: repos/home-assistant-config/dashboards/map.yaml
+      title: Repository Map
+      icon: mdi:test-tube
+      show_in_sidebar: false
+      require_admin: true
+
+automation: !include repos/home-assistant-config/automations.yaml
+script: !include repos/home-assistant-config/scripts.yaml
+scene: !include repos/home-assistant-config/scenes.yaml

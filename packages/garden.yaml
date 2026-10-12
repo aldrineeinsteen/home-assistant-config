@@ -1,0 +1,161 @@
+input_select:
+  garden_motion_pause_duration:
+    name: Garden Motion Pause Duration
+    options:
+      - "30 minutes"
+      - "60 minutes"
+      - "120 minutes"
+    initial: "30 minutes"
+    icon: mdi:timer-cog-outline
+
+input_boolean:
+  garden_automation_enabled:
+    name: Garden Motion Automation
+    icon: mdi:motion-sensor
+
+timer:
+  garden_motion_pause:
+    name: Garden Motion Pause
+    duration: "00:30:00"
+    restore: true
+    icon: mdi:motion-sensor-off
+
+script:
+  garden_apply_motion_policy:
+    alias: Garden - Apply Motion Policy
+    icon: mdi:motion-sensor
+    mode: restart
+    sequence:
+      - variables:
+          automation_enabled: >-
+            {{ is_state('input_boolean.garden_automation_enabled', 'on') }}
+          pause_state: "{{ states('timer.garden_motion_pause') }}"
+          is_daytime: >
+            {{
+              now().strftime('%H:%M:%S') >= '05:00:00'
+              and now().strftime('%H:%M:%S') < '21:00:00'
+            }}
+          motion_should_be_enabled: >
+            {{
+              automation_enabled
+              and pause_state == 'idle'
+              and not is_daytime
+            }}
+      - if:
+          - condition: template
+            value_template: >-
+              {{ not automation_enabled and pause_state != 'idle' }}
+        then:
+          - action: timer.cancel
+            target:
+              entity_id: timer.garden_motion_pause
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ motion_should_be_enabled }}"
+            sequence:
+              - action: light.turn_off
+                target:
+                  entity_id: light.garden_light
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.garden_motion_detection
+        default:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.garden_motion_detection
+          - action: light.turn_off
+            target:
+              entity_id: light.garden_light
+
+  garden_pause_motion:
+    alias: Garden - Pause Motion
+    icon: mdi:motion-sensor-off
+    mode: restart
+    sequence:
+      - condition: state
+        entity_id: input_boolean.garden_automation_enabled
+        state: "on"
+      - action: timer.start
+        target:
+          entity_id: timer.garden_motion_pause
+        data:
+          duration: >
+            {% set durations = {
+              '30 minutes': '00:30:00',
+              '60 minutes': '01:00:00',
+              '120 minutes': '02:00:00'
+            } %}
+            {{
+              durations.get(
+                states('input_select.garden_motion_pause_duration'),
+                '00:30:00'
+              )
+            }}
+      - action: script.garden_apply_motion_policy
+
+  garden_resume_motion:
+    alias: Garden - Resume Motion Now
+    icon: mdi:motion-sensor
+    mode: restart
+    sequence:
+      - action: timer.cancel
+        target:
+          entity_id: timer.garden_motion_pause
+      - action: script.garden_apply_motion_policy
+
+automation:
+  - alias: Garden - Motion Light
+    id: garden_motion_light
+    description: >
+      Turn the Garden floodlight on for two minutes when Ring reports motion
+      between 21:00 and 05:00. Further motion restarts the two-minute delay.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: event.garden_motion
+    condition:
+      - condition: template
+        value_template: >
+          {{
+            as_timestamp(trigger.to_state.state, 0)
+            >= as_timestamp(now()) - 30
+          }}
+      - condition: state
+        entity_id: input_boolean.garden_automation_enabled
+        state: "on"
+      - condition: state
+        entity_id: timer.garden_motion_pause
+        state: "idle"
+      - condition: template
+        value_template: >
+          {{
+            now().strftime('%H:%M:%S') >= '21:00:00'
+            or now().strftime('%H:%M:%S') < '05:00:00'
+          }}
+    action:
+      - action: light.turn_on
+        target:
+          entity_id: light.garden_light
+      - delay: "00:02:00"
+      - action: light.turn_off
+        target:
+          entity_id: light.garden_light
+
+  - alias: Garden - Reapply Motion Policy
+    id: garden_reapply_motion_policy
+    description: >
+      Apply the garden motion policy when a pause starts, finishes, or is
+      cancelled, when Ring reports the motion switch has changed, or when the
+      master control changes. An idle timer restores the normal home/time
+      policy only while the master control is enabled.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: timer.garden_motion_pause
+      - platform: state
+        entity_id: switch.garden_motion_detection
+      - platform: state
+        entity_id: input_boolean.garden_automation_enabled
+    action:
+      - action: script.garden_apply_motion_policy

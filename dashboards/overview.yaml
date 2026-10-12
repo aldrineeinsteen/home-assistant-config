@@ -1,0 +1,226 @@
+title: Home
+views:
+  - title: Home
+    path: home
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Home
+          - type: entities
+            title: People
+            show_header_toggle: false
+            entities:
+              - entity: person.aldrine_einsteen
+                name: Aldy
+              - entity: person.evangeline_aldrine
+                name: Evangeline
+          - type: tile
+            entity: weather.forecast_home
+            name: Outside Weather
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heating
+          - type: thermostat
+            entity: climate.hive_control
+            name: Main Heating
+          - type: tile
+            entity: sensor.first_floor_avg_temperature
+            name: First Floor Avg Temp
+      - type: grid
+        cards:
+          - type: heading
+            heading: Security
+          - type: picture-entity
+            entity: camera.front_door_live_view
+            name: Front Door
+            camera_view: live
+            show_state: false
+            show_name: true
+          - type: picture-entity
+            entity: camera.garden_live_view
+            name: Garden
+            camera_view: live
+            show_state: false
+            show_name: true
+  - title: Heating Controls
+    path: heating
+    icon: mdi:radiator
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Main Heating Control
+          - type: thermostat
+            entity: climate.hive_control
+            name: Hive Heating
+          - type: tile
+            entity: sensor.outside_temperature
+            name: Outside Temperature
+          - type: entities
+            title: Heating Actions
+            show_header_toggle: false
+            entities:
+              - entity: input_select.heating_manual_mode
+                name: Manual Mode
+              - entity: input_boolean.heating_policy_control_enabled
+                name: Repository Control Enabled
+              - entity: script.heating_start_boost
+                name: Start Boost
+              - entity: script.heating_cancel_boost
+                name: Cancel Boost
+              - entity: script.heating_clear_manual_mode
+                name: Return To Auto
+      - type: grid
+        cards:
+          - type: heading
+            heading: Hot Water Control
+          - type: tile
+            entity: water_heater.hive_control
+            name: Base Hot Water Mode
+          - type: tile
+            entity: sensor.hive_hot_water_status
+            name: Effective Hot Water Status
+          - type: entities
+            title: Hot Water Schedule
+            show_header_toggle: false
+            entities:
+              - entity: schedule.hot_water_weekly
+                name: Weekday and Weekend Schedule
+          - type: entities
+            title: Hot Water Boost
+            show_header_toggle: false
+            entities:
+              - entity: binary_sensor.hive_control_hotwater_boost
+                name: Boost Active
+              - entity: binary_sensor.hive_control_hotwater_state
+                name: Boiler Hot-Water Output
+              - entity: script.hot_water_boost_30_minutes
+                name: Boost 30 Minutes
+              - entity: script.hot_water_boost_60_minutes
+                name: Boost 60 Minutes
+              - entity: script.hot_water_boost_120_minutes
+                name: Boost 120 Minutes
+              - entity: script.hot_water_cancel_boost
+                name: Cancel Boost
+      - type: grid
+        cards:
+          - type: heading
+            heading: Zone Targets
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: input_number.heating_target_ground_floor
+                name: Ground Floor Target
+              - entity: input_number.heating_target_first_floor
+                name: First Floor Target
+              - entity: input_number.heating_target_dining_room
+                name: Dining Room Target
+              - entity: input_number.heating_target_chris_room
+                name: Chris Room Target
+              - entity: input_number.heating_target_keona_room
+                name: Keona Room Target
+          - type: entities
+            title: Warm-Weather Overrides
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: input_boolean.heating_ground_floor_warm_weather_override
+                name: Ground Floor Override
+              - entity: input_boolean.heating_first_floor_warm_weather_override
+                name: First Floor Override
+              - entity: input_boolean.heating_dining_room_warm_weather_override
+                name: Dining Room Override
+              - entity: input_boolean.heating_chris_room_warm_weather_override
+                name: Chris Room Override
+              - entity: input_boolean.heating_keona_room_warm_weather_override
+                name: Keona Room Override
+  - title: Automations
+    path: automations
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Seed Rack Status
+          - type: entities
+            title: Seed Rack Lights
+            show_header_toggle: false
+            entities:
+              - entity: switch.top_lights_seed_rack_socket_1
+                name: Top Lights
+              - entity: switch.bottom_lights_seed_rack_socket_1
+                name: Bottom Lights
+          - type: entities
+            title: Seed Rack Health
+            show_header_toggle: false
+            entities:
+              - entity: binary_sensor.seed_rack_lights_should_be_on
+                name: Should Be On
+              - entity: binary_sensor.seed_rack_lights_in_sync
+                name: In Sync
+          - type: entities
+            title: Seed Rack Automation
+            show_header_toggle: false
+            entities:
+              - entity: automation.seed_rack_light_failsafe
+                name: Seed Rack Lights - Failsafe
+      - type: grid
+        cards:
+          - type: heading
+            heading: Heating Automations
+          - type: entities
+            title: Heating Control
+            show_header_toggle: false
+            entities:
+              - entity: automation.heating_zone_policy_manager
+                name: Boiler Demand Policy
+              - entity: automation.chris_room_trv_manager
+                name: Zone TRV Manager
+              - entity: binary_sensor.heating_boiler_demand
+                name: Boiler Demand
+              - entity: sensor.heating_active_zones
+                name: Active Zones
+              - entity: sensor.heating_requested_target
+                name: Requested Target
+              - entity: sensor.heating_boiler_lockout_reason
+                name: Lockout Reason
+      - type: grid
+        cards:
+          - type: heading
+            heading: Seasonal Lighting
+          - type: entities
+            title: Christmas Lights
+            show_header_toggle: false
+            entities:
+              - entity: automation.christmas_lights_on
+                name: Christmas Lights - On
+              - entity: automation.christmas_lights_off
+                name: Christmas Lights - Off
+      - type: grid
+        cards:
+          - type: heading
+            heading: Garden Motion Lighting
+          - type: entities
+            title: Garden Motion Controls
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.garden_automation_enabled
+                name: Garden Motion Automation
+              - entity: switch.garden_motion_detection
+                name: Garden Motion Detection
+              - entity: input_select.garden_motion_pause_duration
+                name: Pause Duration
+              - entity: timer.garden_motion_pause
+                name: Pause Remaining
+              - entity: script.garden_pause_motion
+                name: Start Motion Pause
+              - entity: script.garden_resume_motion
+                name: Resume Motion Now

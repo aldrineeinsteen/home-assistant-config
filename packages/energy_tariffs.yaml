@@ -1,0 +1,33 @@
+template:
+  - sensor:
+      - name: "Electricity Unit Rate"
+        unit_of_measurement: "£/kWh"
+        state: 0.2058
+
+      - name: "Electricity Standing Charge Daily"
+        unit_of_measurement: "£"
+        state: 0.4728
+
+      - name: "Gas Unit Rate"
+        unit_of_measurement: "£/kWh"
+        state: 0.0541
+
+      - name: "Gas Standing Charge Daily"
+        unit_of_measurement: "£"
+        state: 0.311
+
+      - name: "Electricity Standing Charge Monthly"
+        unit_of_measurement: "£"
+        state: >
+          {{
+            (states('sensor.electricity_standing_charge_daily')
+            | float(0) * 30) | round(2)
+          }}
+
+      - name: "Gas Standing Charge Monthly"
+        unit_of_measurement: "£"
+        state: >
+          {{
+            (states('sensor.gas_standing_charge_daily')
+            | float(0) * 30) | round(2)
+          }}

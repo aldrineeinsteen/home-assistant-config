@@ -1,0 +1,14 @@
+[Unit]
+Description=Publish systemd health for %i to Home Assistant MQTT
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/systemd-health-publisher/%i.env
+ExecStart=/usr/local/sbin/systemd-health-publisher
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

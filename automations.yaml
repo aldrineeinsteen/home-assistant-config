@@ -1,0 +1,683 @@
+- id: '1765641005599'
+  alias: Christmas Lights On
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunset
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: d9d7af5e2e260672baa7acf1c980b5b1
+    entity_id: 7d8ba1ef727d6244e48eb16c4801bf08
+    domain: switch
+  - type: turn_on
+    device_id: ace64b2443b97655f345cb694304a8e5
+    entity_id: bba9f9474f53b55035701363c07ae5e9
+    domain: switch
+  - type: turn_on
+    device_id: b116c9f373247200ac6be7c82526afe4
+    entity_id: 347898965da2282c4a43e8437712b5e2
+    domain: switch
+  mode: single
+- id: '1765641118622'
+  alias: Christmas Lights Off
+  description: ''
+  triggers:
+  - trigger: sun
+    event: sunrise
+    offset: 0
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: d9d7af5e2e260672baa7acf1c980b5b1
+    entity_id: 7d8ba1ef727d6244e48eb16c4801bf08
+    domain: switch
+  - type: turn_off
+    device_id: ace64b2443b97655f345cb694304a8e5
+    entity_id: bba9f9474f53b55035701363c07ae5e9
+    domain: switch
+  - type: turn_off
+    device_id: b116c9f373247200ac6be7c82526afe4
+    entity_id: 347898965da2282c4a43e8437712b5e2
+    domain: switch
+  mode: single
+- id: seed_rack_lights_failsafe
+  alias: seed-rack-light-failsafe
+  triggers:
+  - minutes: /5
+    trigger: time_pattern
+  actions:
+  - choose:
+    - conditions:
+      - condition: time
+        after: 07:00:00
+        before: '20:00:00'
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: switch.top_lights_seed_rack_socket_1
+          state: 'off'
+        - condition: state
+          entity_id: switch.bottom_lights_seed_rack_socket_1
+          state: 'off'
+      sequence:
+      - target:
+          entity_id:
+          - switch.top_lights_seed_rack_socket_1
+          - switch.bottom_lights_seed_rack_socket_1
+        action: switch.turn_on
+    - conditions:
+      - condition: or
+        conditions:
+        - condition: time
+          before: 07:00:00
+        - condition: time
+          after: '20:00:00'
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: switch.top_lights_seed_rack_socket_1
+          state: 'on'
+        - condition: state
+          entity_id: switch.bottom_lights_seed_rack_socket_1
+          state: 'on'
+      sequence:
+      - target:
+          entity_id:
+          - switch.top_lights_seed_rack_socket_1
+          - switch.bottom_lights_seed_rack_socket_1
+        action: switch.turn_off
+  mode: single
+- id: ring_motion_mode_manager
+  alias: Ring Motion Mode Manager
+  description: >
+    Keep Front Door motion enabled and apply the Garden motion policy. Garden
+    motion is always enabled from 21:00 to 05:00, regardless of presence,
+    unless the dashboard pause timer is active or the Garden master control is
+    disabled.
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.anyone_home
+  - platform: time
+    at: 05:00:00
+  - platform: time
+    at: '21:00:00'
+  - platform: homeassistant
+    event: start
+  condition: []
+  action:
+  - variables:
+      anyone_home: '{{ is_state(''binary_sensor.anyone_home'', ''on'') }}'
+      is_daytime: '{{ now().strftime(''%H:%M:%S'') >= ''05:00:00'' and now().strftime(''%H:%M:%S'')
+        < ''21:00:00'' }}'
+  - action: switch.turn_on
+    target:
+      entity_id: switch.front_door_motion_detection
+  - action: script.garden_apply_motion_policy
+  - action: system_log.write
+    data:
+      level: info
+      message: >
+        [Ring Motion Mode Manager]
+        presence={{ 'home' if anyone_home else 'away' }},
+        period={{ 'day' if is_daytime else 'night' }},
+        garden_motion={{ states('switch.garden_motion_detection') }},
+        garden_pause={{ states('timer.garden_motion_pause') }}
+  mode: single
+- alias: Heating Boiler Demand Policy
+  id: heating_zone_policy_manager
+  mode: restart
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.hive_control_available
+        - binary_sensor.heating_boiler_demand
+        - sensor.heating_boiler_lockout_reason
+        - sensor.heating_requested_target
+        - input_boolean.heating_policy_control_enabled
+    - platform: state
+      entity_id: climate.hive_control
+      to: "heat"
+    - platform: state
+      entity_id: climate.hive_control
+      to: "off"
+    - platform: state
+      entity_id:
+        - input_number.heating_away_setback_target
+        - input_number.heating_boiler_call_temperature
+        - input_number.heating_minimum_boiler_on_minutes
+        - input_number.heating_minimum_boiler_off_minutes
+        - input_number.heating_hive_acknowledgement_tolerance
+        - input_boolean.heating_ground_floor_warm_weather_override
+        - input_boolean.heating_first_floor_warm_weather_override
+        - input_boolean.heating_chris_room_warm_weather_override
+        - input_boolean.heating_keona_room_warm_weather_override
+        - input_boolean.heating_dining_room_warm_weather_override
+    - platform: homeassistant
+      event: start
+    - platform: time_pattern
+      minutes: "/1"
+
+  variables:
+    effective_mode: "{{ states('sensor.heating_effective_mode') }}"
+    hive_available: "{{ is_state('binary_sensor.hive_control_available', 'on') }}"
+    boiler_demand: "{{ is_state('binary_sensor.heating_boiler_demand', 'on') }}"
+    boiler_lockout_reason: >
+      {{ states('sensor.heating_boiler_lockout_reason') }}
+    current_hvac_mode: "{{ states('climate.hive_control') }}"
+    current_hive_target: >
+      {{ state_attr('climate.hive_control', 'temperature') }}
+    boiler_call_temperature: >
+      {{ states('input_number.heating_boiler_call_temperature') | float(30) }}
+    frost_setback_temperature: >
+      {{ states('input_number.heating_away_setback_target') | float(12) }}
+    acknowledgement_tolerance: >
+      {{
+        states('input_number.heating_hive_acknowledgement_tolerance')
+        | float(0.2)
+      }}
+    outside_temp: "{{ states('sensor.outside_temperature') }}"
+    outside_temp_valid: "{{ is_number(outside_temp) }}"
+    outside_temp_unavailable_long_enough: >
+      {{
+        not outside_temp_valid
+        and (
+          now() - states.sensor.outside_temperature.last_changed
+        ) >= timedelta(minutes=15)
+      }}
+    outside_temp_alert_required: >
+      {{
+        is_state('input_boolean.heating_policy_control_enabled', 'on')
+        and outside_temp_unavailable_long_enough
+      }}
+    freezing_cutoff: "{{ states('input_number.heating_freezing_cutoff') | float(6) }}"
+    frost_protection_active: >
+      {{
+        outside_temp_valid
+        and outside_temp | float <= freezing_cutoff | float
+      }}
+    requested_target_state: "{{ states('sensor.heating_requested_target') }}"
+    requested_target: >
+      {% if is_number(requested_target_state) %}
+        {{ requested_target_state | float }}
+      {% elif frost_protection_active
+        and states('sensor.heating_active_zones') == 'none' %}
+        {{ frost_setback_temperature }}
+      {% elif boiler_lockout_reason == 'minimum_on'
+        and is_number(current_hive_target) %}
+        {{ current_hive_target | float }}
+      {% else %}
+        {{ boiler_call_temperature }}
+      {% endif %}
+
+    ground_floor_temp: "{{ states('sensor.ground_floor_avg_temperature') }}"
+    first_floor_temp: "{{ states('sensor.first_floor_avg_temperature') }}"
+    chris_temp: "{{ states('sensor.chris_bedroom_current_temperature') }}"
+    keona_temp: "{{ states('sensor.heating_keona_room_current_temperature') }}"
+    dining_temp: "{{ states('sensor.heating_dining_room_current_temperature') }}"
+
+    ground_floor_temp_valid: "{{ is_number(ground_floor_temp) }}"
+    first_floor_temp_valid: "{{ is_number(first_floor_temp) }}"
+    chris_temp_valid: "{{ is_number(chris_temp) }}"
+    keona_temp_valid: "{{ is_number(keona_temp) }}"
+    dining_temp_valid: "{{ is_number(dining_temp) }}"
+    indoor_temperature_available: >
+      {{
+        ground_floor_temp_valid
+        or first_floor_temp_valid
+        or chris_temp_valid
+        or keona_temp_valid
+        or dining_temp_valid
+      }}
+    hvac_mode: >
+      {% if boiler_lockout_reason in
+        ['control_disabled', 'invalid_mode', 'all_indoor_sensors_invalid'] %}
+        skip
+      {% elif boiler_lockout_reason == 'hive_unavailable' %}
+        unavailable
+      {% elif boiler_lockout_reason == 'minimum_off' %}
+        hold
+      {% elif boiler_demand or boiler_lockout_reason == 'minimum_on' %}
+        heat
+      {% else %}
+        off
+      {% endif %}
+
+    desired_temp: >
+      {% if hvac_mode == 'heat' %}
+        {{ requested_target }}
+      {% else %}
+        0
+      {% endif %}
+
+    active_zones: >
+      {{ states('sensor.heating_active_zones') }}
+
+    hvac_mode_needs_change: >
+      {{ hvac_mode in ['heat', 'off'] and current_hvac_mode != hvac_mode }}
+    temperature_acknowledged: >
+      {{
+        is_number(current_hive_target)
+        and (
+          (current_hive_target | float)
+          - (requested_target | float)
+        ) | abs <= acknowledgement_tolerance
+      }}
+    temperature_needs_change: >
+      {{ hvac_mode == 'heat' and not temperature_acknowledged }}
+
+    policy_mode: >
+      {% if hvac_mode == 'skip' %}
+        sensor_failure
+      {% elif hvac_mode == 'unavailable' %}
+        hive_unavailable
+      {% elif hvac_mode == 'hold' %}
+        minimum_off_lockout
+      {% elif frost_protection_active %}
+        frost_protection
+      {% elif effective_mode == 'Boost' and hvac_mode == 'heat' %}
+        boost
+      {% elif hvac_mode == 'off' %}
+        off
+      {% else %}
+        zone_heating
+      {% endif %}
+
+  action:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not indoor_temperature_available }}"
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >
+                        {{
+                          not has_value(
+                            'persistent_notification.heating_indoor_temperature_unavailable'
+                          )
+                        }}
+                  sequence:
+                    - service: persistent_notification.create
+                      data:
+                        notification_id: heating_indoor_temperature_unavailable
+                        title: Heating indoor temperatures unavailable
+                        message: >
+                          Ground floor, first floor, Chris room, Keona room, and Dining Room temperature
+                          sources are unavailable. Normal zone control is paused.
+                          Frost protection remains active only when the outside
+                          temperature is valid and at or below the freezing cutoff.
+                          Outside temperature={{ outside_temp }},
+                          frost protection={{ frost_protection_active }}.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  indoor_temperature_available
+                  and has_value(
+                    'persistent_notification.heating_indoor_temperature_unavailable'
+                  )
+                }}
+          sequence:
+            - service: persistent_notification.dismiss
+              data:
+                notification_id: heating_indoor_temperature_unavailable
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ outside_temp_alert_required }}"
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >
+                        {{
+                          not has_value(
+                            'persistent_notification.heating_outside_temperature_unavailable'
+                          )
+                        }}
+                  sequence:
+                    - service: persistent_notification.create
+                      data:
+                        notification_id: heating_outside_temperature_unavailable
+                        title: Heating outside temperature unavailable
+                        message: >
+                          The weather-based outside temperature has been
+                          unavailable for at least 15 minutes while heating
+                          policy control is enabled.
+                          Warm-weather shutoff and frost detection are suspended;
+                          valid indoor zones continue normal temperature control.
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  not outside_temp_alert_required
+                  and has_value(
+                    'persistent_notification.heating_outside_temperature_unavailable'
+                  )
+                }}
+          sequence:
+            - service: persistent_notification.dismiss
+              data:
+                notification_id: heating_outside_temperature_unavailable
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ hvac_mode == 'skip' }}"
+          sequence:
+            - stop: Heating mode or indoor temperature sources are unavailable
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  hive_available
+                  and has_value(
+                    'persistent_notification.heating_hive_unavailable'
+                  )
+                }}
+          sequence:
+            - service: persistent_notification.dismiss
+              data:
+                notification_id: heating_hive_unavailable
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ hvac_mode == 'hold' }}"
+          sequence:
+            - stop: Minimum boiler off time is still active
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not hive_available }}"
+          sequence:
+            - service: persistent_notification.create
+              data:
+                notification_id: heating_hive_unavailable
+                title: Heating Policy Skipped
+                message: >
+                  Hive control unavailable.
+                  mode={{ policy_mode }},
+                  desired_temp={{ desired_temp }},
+                  active_zones={{ active_zones }}
+            - stop: Hive unavailable
+
+    # Repository control is deliberately off on first deployment. Diagnostics
+    # and failure notifications above remain active while physical commands
+    # below are blocked.
+    - condition: state
+      entity_id: input_boolean.heating_policy_control_enabled
+      state: "on"
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ hvac_mode_needs_change }}"
+          sequence:
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.hive_control
+              data:
+                hvac_mode: "{{ hvac_mode }}"
+              continue_on_error: true
+
+            - wait_template: >
+                {{ is_state('climate.hive_control', hvac_mode) }}
+              timeout: "00:00:15"
+              continue_on_timeout: true
+
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ not wait.completed }}"
+                  sequence:
+                    - service: climate.set_hvac_mode
+                      target:
+                        entity_id: climate.hive_control
+                      data:
+                        hvac_mode: "{{ hvac_mode }}"
+                      continue_on_error: true
+
+                    - wait_template: >
+                        {{ is_state('climate.hive_control', hvac_mode) }}
+                      timeout: "00:00:15"
+                      continue_on_timeout: true
+
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >
+                        {{ not is_state('climate.hive_control', hvac_mode) }}
+                  sequence:
+                    - service: persistent_notification.create
+                      data:
+                        notification_id: heating_hive_command_unacknowledged
+                        title: Hive HVAC command not acknowledged
+                        message: >
+                          Hive did not acknowledge {{ hvac_mode }} after one
+                          retry. Current state={{ states('climate.hive_control') }},
+                          boiler demand={{ boiler_demand }},
+                          active zones={{ active_zones }}.
+                    - stop: Hive HVAC command was not acknowledged
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {% set live_target =
+                  state_attr('climate.hive_control', 'temperature') %}
+                {{
+                  hvac_mode == 'heat'
+                  and (
+                    not is_number(live_target)
+                    or (
+                      (live_target | float)
+                      - (requested_target | float)
+                    ) | abs > acknowledgement_tolerance
+                  )
+                }}
+          sequence:
+            - service: climate.set_temperature
+              target:
+                entity_id: climate.hive_control
+              data:
+                temperature: "{{ requested_target }}"
+              continue_on_error: true
+
+            - wait_template: >
+                {% set acknowledged =
+                  state_attr('climate.hive_control', 'temperature') %}
+                {{
+                  is_number(acknowledged)
+                  and (
+                    (acknowledged | float)
+                    - (requested_target | float)
+                  ) | abs <= acknowledgement_tolerance
+                }}
+              timeout: "00:00:15"
+              continue_on_timeout: true
+
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ not wait.completed }}"
+                  sequence:
+                    - service: climate.set_temperature
+                      target:
+                        entity_id: climate.hive_control
+                      data:
+                        temperature: "{{ requested_target }}"
+                      continue_on_error: true
+
+                    - wait_template: >
+                        {% set acknowledged =
+                          state_attr('climate.hive_control', 'temperature') %}
+                        {{
+                          is_number(acknowledged)
+                          and (
+                            (acknowledged | float)
+                            - (requested_target | float)
+                          ) | abs <= acknowledgement_tolerance
+                        }}
+                      timeout: "00:00:15"
+                      continue_on_timeout: true
+
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >
+                        {% set acknowledged =
+                          state_attr('climate.hive_control', 'temperature') %}
+                        {{
+                          not is_number(acknowledged)
+                          or (
+                            (acknowledged | float)
+                            - (requested_target | float)
+                          ) | abs > acknowledgement_tolerance
+                        }}
+                  sequence:
+                    - service: persistent_notification.create
+                      data:
+                        notification_id: heating_hive_command_unacknowledged
+                        title: Hive target not acknowledged
+                        message: >
+                          Hive did not acknowledge the {{ requested_target }}°C
+                          boiler-call target after one retry. Current target={{
+                          state_attr('climate.hive_control', 'temperature') }},
+                          tolerance={{ acknowledgement_tolerance }}°C,
+                          active zones={{ active_zones }}.
+                    - stop: Hive target command was not acknowledged
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{
+                  has_value(
+                    'persistent_notification.heating_hive_command_unacknowledged'
+                  )
+                }}
+          sequence:
+            - service: persistent_notification.dismiss
+              data:
+                notification_id: heating_hive_command_unacknowledged
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >
+                {{ hvac_mode_needs_change or temperature_needs_change }}
+          sequence:
+            - service: system_log.write
+              data:
+                level: warning
+                message: >
+                  Heating boiler policy commanded Hive.
+                  policy={{ policy_mode }},
+                  requested_hvac={{ hvac_mode }},
+                  requested_target={{ desired_temp }},
+                  boiler_demand={{ boiler_demand }},
+                  active_zones={{ active_zones }},
+                  lockout={{ boiler_lockout_reason }},
+                  current_hvac={{ states('climate.hive_control') }},
+                  current_target={{
+                    state_attr('climate.hive_control', 'temperature') }}
+
+- alias: Heating Zone TRV Manager
+  id: chris_room_trv_manager
+  mode: restart
+  trigger:
+    - platform: state
+      entity_id:
+        - binary_sensor.heating_ground_floor_demand
+        - binary_sensor.heating_first_floor_demand
+        - binary_sensor.heating_chris_room_demand
+        - binary_sensor.heating_keona_room_demand
+        - binary_sensor.heating_dining_room_demand
+        - binary_sensor.outside_warm_enough_for_heating_off
+        - sensor.heating_ground_floor_effective_target
+        - sensor.heating_first_floor_effective_target
+        - sensor.heating_chris_room_effective_target
+        - sensor.heating_keona_room_effective_target
+        - sensor.heating_dining_room_effective_target
+        - sensor.outside_temperature
+        - sensor.heating_effective_mode
+        - input_number.heating_away_setback_target
+        - input_number.heating_chris_room_frost_target
+        - input_number.heating_keona_room_frost_target
+        - input_number.heating_freezing_cutoff
+        - input_boolean.heating_ground_floor_warm_weather_override
+        - input_boolean.heating_first_floor_warm_weather_override
+        - input_boolean.heating_chris_room_warm_weather_override
+        - input_boolean.heating_keona_room_warm_weather_override
+        - input_boolean.heating_dining_room_warm_weather_override
+        - input_boolean.heating_policy_control_enabled
+    - platform: homeassistant
+      event: start
+    - platform: time_pattern
+      minutes: "/5"
+
+  action:
+    - condition: state
+      entity_id: input_boolean.heating_policy_control_enabled
+      state: "on"
+    - repeat:
+        for_each:
+          - trv: climate.radiator_valve_1_5
+            demand: binary_sensor.heating_ground_floor_demand
+            target: sensor.heating_ground_floor_effective_target
+            current: sensor.radiator_valve_1_current_temperature_5
+            frost_target: input_number.heating_away_setback_target
+            warm_weather_override: input_boolean.heating_ground_floor_warm_weather_override
+          - trv: climate.radiator_valve_1_2
+            demand: binary_sensor.heating_first_floor_demand
+            target: sensor.heating_first_floor_effective_target
+            current: sensor.radiator_valve_1_current_temperature_2
+            frost_target: input_number.heating_away_setback_target
+            warm_weather_override: input_boolean.heating_first_floor_warm_weather_override
+          - trv: climate.radiator_valve_1_master_bedroom_3
+            demand: binary_sensor.heating_first_floor_demand
+            target: sensor.heating_first_floor_effective_target
+            current: sensor.radiator_valve_1_current_temperature
+            frost_target: input_number.heating_away_setback_target
+            warm_weather_override: input_boolean.heating_first_floor_warm_weather_override
+          - trv: climate.chris_bedroom_1
+            demand: binary_sensor.heating_chris_room_demand
+            target: sensor.heating_chris_room_effective_target
+            current: sensor.chris_bedroom_current_temperature
+            frost_target: input_number.heating_chris_room_frost_target
+            warm_weather_override: input_boolean.heating_chris_room_warm_weather_override
+          - trv: climate.keona_bedroom_1
+            demand: binary_sensor.heating_keona_room_demand
+            target: sensor.heating_keona_room_effective_target
+            current: sensor.heating_keona_room_current_temperature
+            frost_target: input_number.heating_keona_room_frost_target
+            warm_weather_override: input_boolean.heating_keona_room_warm_weather_override
+          - trv: climate.keona_bedroom_2
+            demand: binary_sensor.heating_keona_room_demand
+            target: sensor.heating_keona_room_effective_target
+            current: sensor.heating_keona_room_current_temperature
+            frost_target: input_number.heating_keona_room_frost_target
+            warm_weather_override: input_boolean.heating_keona_room_warm_weather_override
+          - trv: climate.dinning_room_1
+            demand: binary_sensor.heating_dining_room_demand
+            target: sensor.heating_dining_room_effective_target
+            current: sensor.heating_dining_room_current_temperature
+            frost_target: input_number.heating_away_setback_target
+            warm_weather_override: input_boolean.heating_dining_room_warm_weather_override
+        sequence:
+          - action: script.heating_apply_trv_policy
+            data:
+              trv_entity: "{{ repeat.item.trv }}"
+              demand_entity: "{{ repeat.item.demand }}"
+              target_entity: "{{ repeat.item.target }}"
+              current_temperature_entity: "{{ repeat.item.current }}"
+              frost_target_entity: "{{ repeat.item.frost_target }}"
+              warm_weather_override_entity: "{{ repeat.item.warm_weather_override }}"
