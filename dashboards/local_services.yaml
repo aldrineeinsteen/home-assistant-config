@@ -202,6 +202,19 @@ views:
                 name: CPU Temperature
               - entity: sensor.system_monitor_processor_use
                 name: CPU Utilisation
+          - type: entities
+            title: Infrastructure Maintenance
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: script.infrastructure_run_publisher_deployment_checks
+                name: Run Publisher Deployment Checks
+              - entity: script.infrastructure_refresh_publisher_telemetry
+                name: Refresh Publisher Telemetry
+              - entity: input_boolean.infrastructure_auto_recover_publishers
+                name: Auto-Recover Telemetry
+              - entity: automation.infrastructure_refresh_publishers_when_telemetry_missing
+                name: Auto-Recover Automation
       - type: grid
         cards:
           - type: heading
