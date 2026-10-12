@@ -93,24 +93,22 @@
   alias: Ring Motion Mode Manager
   description: >
     Keep Front Door motion enabled and apply the Garden motion policy. Garden
-    motion is always enabled from 21:00 to 05:00, regardless of presence,
-    unless the dashboard pause timer is active or the Garden master control is
-    disabled.
+    motion is enabled when everyone is away or after sunset, unless the
+    dashboard pause timer is active or the Garden master control is disabled.
   trigger:
   - platform: state
     entity_id: binary_sensor.anyone_home
-  - platform: time
-    at: 05:00:00
-  - platform: time
-    at: '21:00:00'
+  - platform: sun
+    event: sunset
+  - platform: sun
+    event: sunrise
   - platform: homeassistant
     event: start
   condition: []
   action:
   - variables:
       anyone_home: '{{ is_state(''binary_sensor.anyone_home'', ''on'') }}'
-      is_daytime: '{{ now().strftime(''%H:%M:%S'') >= ''05:00:00'' and now().strftime(''%H:%M:%S'')
-        < ''21:00:00'' }}'
+      is_after_sunset: '{{ is_state(''sun.sun'', ''below_horizon'') }}'
   - action: switch.turn_on
     target:
       entity_id: switch.front_door_motion_detection
@@ -121,7 +119,7 @@
       message: >
         [Ring Motion Mode Manager]
         presence={{ 'home' if anyone_home else 'away' }},
-        period={{ 'day' if is_daytime else 'night' }},
+        period={{ 'night' if is_after_sunset else 'day' }},
         garden_motion={{ states('switch.garden_motion_detection') }},
         garden_pause={{ states('timer.garden_motion_pause') }}
   mode: single

@@ -29,17 +29,16 @@ script:
       - variables:
           automation_enabled: >-
             {{ is_state('input_boolean.garden_automation_enabled', 'on') }}
+          anyone_home: >-
+            {{ is_state('binary_sensor.anyone_home', 'on') }}
           pause_state: "{{ states('timer.garden_motion_pause') }}"
-          is_daytime: >
-            {{
-              now().strftime('%H:%M:%S') >= '05:00:00'
-              and now().strftime('%H:%M:%S') < '21:00:00'
-            }}
+          is_after_sunset: >-
+            {{ is_state('sun.sun', 'below_horizon') }}
           motion_should_be_enabled: >
             {{
               automation_enabled
               and pause_state == 'idle'
-              and not is_daytime
+              and (not anyone_home or is_after_sunset)
             }}
       - if:
           - condition: template
@@ -109,7 +108,7 @@ automation:
     id: garden_motion_light
     description: >
       Turn the Garden floodlight on for two minutes when Ring reports motion
-      between 21:00 and 05:00. Further motion restarts the two-minute delay.
+      after sunset. Further motion restarts the two-minute delay.
     mode: restart
     trigger:
       - platform: state
@@ -129,10 +128,7 @@ automation:
         state: "idle"
       - condition: template
         value_template: >
-          {{
-            now().strftime('%H:%M:%S') >= '21:00:00'
-            or now().strftime('%H:%M:%S') < '05:00:00'
-          }}
+          {{ is_state('sun.sun', 'below_horizon') }}
     action:
       - action: light.turn_on
         target:
