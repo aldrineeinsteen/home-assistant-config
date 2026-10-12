@@ -89,3 +89,34 @@ Examples:
 
 If any check fails, the script exits with non-zero status and prints each
 missing file or timer-state mismatch.
+
+## Home Assistant UI execution
+
+`packages/infrastructure.yaml` now exposes two clickable Home Assistant scripts
+on the Local Services dashboard:
+
+- `script.infrastructure_run_publisher_deployment_checks`
+- `script.infrastructure_refresh_publisher_telemetry`
+
+They appear under **Local Services > Services > Infrastructure Maintenance** in
+`dashboards/local_services.yaml`.
+
+Prerequisites for UI execution from Home Assistant:
+
+- key-based SSH from Home Assistant to target hosts as `root`
+- target host keys accepted (or manually pre-seeded in known_hosts)
+- `systemctl` available on target hosts
+
+Default target hosts and actions:
+
+- `192.168.100.96`: checks and refreshes `docker-health-publisher@jellyfin`
+- `192.168.100.99`: checks and refreshes `docker-health-publisher@pi_hole` and
+	`wireguard-health-publisher`
+
+An optional automation is also included:
+
+- `automation.infrastructure_refresh_publishers_when_telemetry_missing`
+
+When enabled via `input_boolean.infrastructure_auto_recover_publishers`, it
+automatically runs the refresh script if telemetry is unavailable for five
+minutes.

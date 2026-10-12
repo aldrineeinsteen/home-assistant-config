@@ -319,3 +319,91 @@ template:
         attributes:
           address: "192.168.100.1"
           model: "GT-BE98"
+
+input_boolean:
+  infrastructure_auto_recover_publishers:
+    name: Infrastructure Auto-Recover Publishers
+    icon: mdi:auto-fix
+
+shell_command:
+  infrastructure_check_jellyfin_host: >-
+    cat /config/repos/home-assistant-config/infrastructure/tests/check-publisher-deployment-status.sh
+    | ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new
+    root@192.168.100.96 "bash -s -- --docker-instance jellyfin"
+
+  infrastructure_check_network_services_host: >-
+    cat /config/repos/home-assistant-config/infrastructure/tests/check-publisher-deployment-status.sh
+    | ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new
+    root@192.168.100.99 "bash -s -- --docker-instance pi_hole --check-wireguard"
+
+  infrastructure_refresh_jellyfin_publisher: >-
+    ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new
+    root@192.168.100.96 "systemctl start docker-health-publisher@jellyfin.service"
+
+  infrastructure_refresh_network_services_publishers: >-
+    ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new
+    root@192.168.100.99 "systemctl start docker-health-publisher@pi_hole.service wireguard-health-publisher.service"
+
+script:
+  infrastructure_run_publisher_deployment_checks:
+    alias: Infrastructure - Run Publisher Deployment Checks
+    icon: mdi:clipboard-check-outline
+    mode: queued
+    max: 2
+    sequence:
+      - action: shell_command.infrastructure_check_jellyfin_host
+        continue_on_error: true
+      - action: shell_command.infrastructure_check_network_services_host
+        continue_on_error: true
+      - action: persistent_notification.create
+        data:
+          notification_id: infrastructure_publisher_checks_requested
+          title: "Infrastructure publisher checks requested"
+          message: >-
+            Requested deployment status checks on 192.168.100.96 and
+            192.168.100.99. Review Home Assistant logs for command output and
+            host-level failures.
+
+  infrastructure_refresh_publisher_telemetry:
+    alias: Infrastructure - Refresh Publisher Telemetry
+    icon: mdi:publish
+    mode: single
+    sequence:
+      - action: shell_command.infrastructure_refresh_jellyfin_publisher
+        continue_on_error: true
+      - action: shell_command.infrastructure_refresh_network_services_publishers
+        continue_on_error: true
+      - action: persistent_notification.create
+        data:
+          notification_id: infrastructure_publisher_refresh_requested
+          title: "Infrastructure telemetry refresh requested"
+          message: >-
+            Started one-shot publisher services on 192.168.100.96 and
+            192.168.100.99.
+
+automation:
+  - id: infrastructure_refresh_publishers_when_telemetry_missing
+    alias: Infrastructure - Refresh Publishers When Telemetry Missing
+    description: >-
+      Runs one-shot publisher services when infrastructure telemetry becomes
+      unavailable for sustained periods.
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: sensor.jellyfin_runtime
+        to: "Telemetry unavailable"
+        for: "00:05:00"
+      - platform: state
+        entity_id: sensor.pi_hole_docker_health
+        to: "Telemetry unavailable"
+        for: "00:05:00"
+      - platform: state
+        entity_id: sensor.wireguard_telemetry_status
+        to: "Telemetry unavailable"
+        for: "00:05:00"
+    condition:
+      - condition: state
+        entity_id: input_boolean.infrastructure_auto_recover_publishers
+        state: "on"
+    action:
+      - action: script.infrastructure_refresh_publisher_telemetry
