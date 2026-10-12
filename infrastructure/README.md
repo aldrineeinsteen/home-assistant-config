@@ -54,3 +54,38 @@ valid payload.
 The publisher does not expose the Docker socket or WireGuard private keys over
 the network. It publishes only container state, interface state, aggregate
 peer count, handshake age, and aggregate traffic counters.
+
+## Deployment status check
+
+Use `infrastructure/tests/check-publisher-deployment-status.sh` on each target
+host to verify that:
+
+- scripts are copied to `/usr/local/sbin`
+- unit templates are copied to `/etc/systemd/system`
+- required environment files are present
+- timers are both enabled and active
+
+The checker requires `systemctl` and should run as `root`.
+
+Examples:
+
+```bash
+# Docker hosts (checks jellyfin + pi_hole by default and wireguard)
+./infrastructure/tests/check-publisher-deployment-status.sh
+
+# Docker host with explicit instances
+./infrastructure/tests/check-publisher-deployment-status.sh \
+	--docker-instance jellyfin \
+	--docker-instance pi_hole
+
+# systemd health host
+./infrastructure/tests/check-publisher-deployment-status.sh \
+	--systemd-instance sshd \
+	--systemd-instance docker
+
+# WireGuard host only
+./infrastructure/tests/check-publisher-deployment-status.sh --check-wireguard
+```
+
+If any check fails, the script exits with non-zero status and prints each
+missing file or timer-state mismatch.
