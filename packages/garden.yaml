@@ -13,12 +13,22 @@ input_boolean:
     name: Garden Motion Automation
     icon: mdi:motion-sensor
 
+  garden_manual_light_15m:
+    name: Garden Light Manual 15m
+    icon: mdi:light-flood-up
+
 timer:
   garden_motion_pause:
     name: Garden Motion Pause
     duration: "00:30:00"
     restore: true
     icon: mdi:motion-sensor-off
+
+  garden_manual_light_15m:
+    name: Garden Light Manual Timer
+    duration: "00:15:00"
+    restore: true
+    icon: mdi:timer-outline
 
 script:
   garden_apply_motion_policy:
@@ -29,6 +39,8 @@ script:
       - variables:
           automation_enabled: >-
             {{ is_state('input_boolean.garden_automation_enabled', 'on') }}
+          manual_override_active: >-
+            {{ is_state('input_boolean.garden_manual_light_15m', 'on') }}
           anyone_home: >-
             {{ is_state('binary_sensor.anyone_home', 'on') }}
           pause_state: "{{ states('timer.garden_motion_pause') }}"
@@ -53,9 +65,13 @@ script:
               - condition: template
                 value_template: "{{ motion_should_be_enabled }}"
             sequence:
-              - action: light.turn_off
-                target:
-                  entity_id: light.garden_light
+              - if:
+                  - condition: template
+                    value_template: "{{ not manual_override_active }}"
+                then:
+                  - action: light.turn_off
+                    target:
+                      entity_id: light.garden_light
               - action: switch.turn_on
                 target:
                   entity_id: switch.garden_motion_detection
@@ -63,9 +79,13 @@ script:
           - action: switch.turn_off
             target:
               entity_id: switch.garden_motion_detection
-          - action: light.turn_off
-            target:
-              entity_id: light.garden_light
+          - if:
+              - condition: template
+                value_template: "{{ not manual_override_active }}"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: light.garden_light
 
   garden_pause_motion:
     alias: Garden - Pause Motion
@@ -126,6 +146,9 @@ automation:
       - condition: state
         entity_id: timer.garden_motion_pause
         state: "idle"
+      - condition: state
+        entity_id: input_boolean.garden_manual_light_15m
+        state: "off"
       - condition: template
         value_template: >
           {{ is_state('sun.sun', 'below_horizon') }}
@@ -134,6 +157,60 @@ automation:
         target:
           entity_id: light.garden_light
       - delay: "00:02:00"
+      - action: light.turn_off
+        target:
+          entity_id: light.garden_light
+
+  - alias: Garden - Manual Light Start
+    id: garden_manual_light_start
+    description: >
+      Turn the garden light on manually and keep it on for 15 minutes.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: input_boolean.garden_manual_light_15m
+        to: "on"
+    action:
+      - action: light.turn_on
+        target:
+          entity_id: light.garden_light
+      - action: timer.start
+        target:
+          entity_id: timer.garden_manual_light_15m
+        data:
+          duration: "00:15:00"
+
+  - alias: Garden - Manual Light Stop
+    id: garden_manual_light_stop
+    description: >
+      Allow manual cancellation before the 15-minute timer finishes.
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_boolean.garden_manual_light_15m
+        to: "off"
+    action:
+      - action: timer.cancel
+        target:
+          entity_id: timer.garden_manual_light_15m
+      - action: light.turn_off
+        target:
+          entity_id: light.garden_light
+
+  - alias: Garden - Manual Light Timeout
+    id: garden_manual_light_timeout
+    description: >
+      Turn off the garden light once the manual 15-minute timer completes.
+    mode: single
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.garden_manual_light_15m
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.garden_manual_light_15m
       - action: light.turn_off
         target:
           entity_id: light.garden_light
