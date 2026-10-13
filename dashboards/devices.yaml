@@ -17,14 +17,14 @@ views:
             icon: mdi:light-flood-up
             show_state: true
             tap_action:
-              action: call-service
-              service: script.turn_on
-              service_data:
+              action: perform-action
+              perform_action: script.turn_on
+              target:
                 entity_id: script.garden_manual_light_15m_trigger
             hold_action:
-              action: call-service
-              service: input_boolean.turn_off
-              service_data:
+              action: perform-action
+              perform_action: input_boolean.turn_off
+              target:
                 entity_id: input_boolean.garden_manual_light_15m
             state:
               - value: "on"
@@ -106,7 +106,10 @@ views:
             name: Garden Motion
             icon: mdi:motion-sensor
             tap_action:
-              action: toggle
+              action: perform-action
+              perform_action: switch.toggle
+              target:
+                entity_id: switch.garden_motion_detection
       - type: heading
         heading: Grow Setup
         icon: mdi:sprout

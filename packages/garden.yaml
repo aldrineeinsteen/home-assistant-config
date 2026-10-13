@@ -236,15 +236,12 @@ automation:
     id: garden_reapply_motion_policy
     description: >
       Apply the garden motion policy when a pause starts, finishes, or is
-      cancelled, when Ring reports the motion switch has changed, or when the
-      master control changes. An idle timer restores the normal home/time
-      policy only while the master control is enabled.
+      cancelled, or when the master control changes. An idle timer restores
+      the normal home/time policy only while the master control is enabled.
     mode: restart
     trigger:
       - platform: state
         entity_id: timer.garden_motion_pause
-      - platform: state
-        entity_id: switch.garden_motion_detection
       - platform: state
         entity_id: input_boolean.garden_automation_enabled
     action:
