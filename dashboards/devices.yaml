@@ -18,9 +18,9 @@ views:
             show_state: true
             tap_action:
               action: call-service
-              service: input_boolean.turn_on
+              service: script.turn_on
               service_data:
-                entity_id: input_boolean.garden_manual_light_15m
+                entity_id: script.garden_manual_light_15m_trigger
             hold_action:
               action: call-service
               service: input_boolean.turn_off

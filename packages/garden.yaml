@@ -31,6 +31,23 @@ timer:
     icon: mdi:timer-outline
 
 script:
+  garden_manual_light_15m_trigger:
+    alias: Garden - Manual Light 15m Trigger
+    icon: mdi:light-flood-up
+    mode: restart
+    sequence:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.garden_manual_light_15m
+      - action: light.turn_on
+        target:
+          entity_id: light.garden_light
+      - action: timer.start
+        target:
+          entity_id: timer.garden_manual_light_15m
+        data:
+          duration: "00:15:00"
+
   garden_apply_motion_policy:
     alias: Garden - Apply Motion Policy
     icon: mdi:motion-sensor
