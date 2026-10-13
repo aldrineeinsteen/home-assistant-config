@@ -18,9 +18,9 @@ views:
             show_state: true
             tap_action:
               action: perform-action
-              perform_action: script.turn_on
+              perform_action: input_boolean.toggle
               target:
-                entity_id: script.garden_manual_light_15m_trigger
+                entity_id: input_boolean.garden_manual_light_15m
             hold_action:
               action: perform-action
               perform_action: input_boolean.turn_off
