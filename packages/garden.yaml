@@ -13,6 +13,10 @@ input_boolean:
     name: Garden Motion Automation
     icon: mdi:motion-sensor
 
+  garden_manual_light_15m:
+    name: Garden Light Manual 15m
+    icon: mdi:light-flood-up
+
 timer:
   garden_motion_pause:
     name: Garden Motion Pause
@@ -20,7 +24,30 @@ timer:
     restore: true
     icon: mdi:motion-sensor-off
 
+  garden_manual_light_15m:
+    name: Garden Light Manual Timer
+    duration: "00:15:00"
+    restore: true
+    icon: mdi:timer-outline
+
 script:
+  garden_manual_light_15m_trigger:
+    alias: Garden - Manual Light 15m Trigger
+    icon: mdi:light-flood-up
+    mode: restart
+    sequence:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.garden_manual_light_15m
+      - action: light.turn_on
+        target:
+          entity_id: light.garden_light
+      - action: timer.start
+        target:
+          entity_id: timer.garden_manual_light_15m
+        data:
+          duration: "00:15:00"
+
   garden_apply_motion_policy:
     alias: Garden - Apply Motion Policy
     icon: mdi:motion-sensor
@@ -29,17 +56,18 @@ script:
       - variables:
           automation_enabled: >-
             {{ is_state('input_boolean.garden_automation_enabled', 'on') }}
+          manual_override_active: >-
+            {{ is_state('input_boolean.garden_manual_light_15m', 'on') }}
+          anyone_home: >-
+            {{ is_state('binary_sensor.anyone_home', 'on') }}
           pause_state: "{{ states('timer.garden_motion_pause') }}"
-          is_daytime: >
-            {{
-              now().strftime('%H:%M:%S') >= '05:00:00'
-              and now().strftime('%H:%M:%S') < '21:00:00'
-            }}
+          is_after_sunset: >-
+            {{ is_state('sun.sun', 'below_horizon') }}
           motion_should_be_enabled: >
             {{
               automation_enabled
               and pause_state == 'idle'
-              and not is_daytime
+              and (not anyone_home or is_after_sunset)
             }}
       - if:
           - condition: template
@@ -54,9 +82,13 @@ script:
               - condition: template
                 value_template: "{{ motion_should_be_enabled }}"
             sequence:
-              - action: light.turn_off
-                target:
-                  entity_id: light.garden_light
+              - if:
+                  - condition: template
+                    value_template: "{{ not manual_override_active }}"
+                then:
+                  - action: light.turn_off
+                    target:
+                      entity_id: light.garden_light
               - action: switch.turn_on
                 target:
                   entity_id: switch.garden_motion_detection
@@ -64,9 +96,13 @@ script:
           - action: switch.turn_off
             target:
               entity_id: switch.garden_motion_detection
-          - action: light.turn_off
-            target:
-              entity_id: light.garden_light
+          - if:
+              - condition: template
+                value_template: "{{ not manual_override_active }}"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: light.garden_light
 
   garden_pause_motion:
     alias: Garden - Pause Motion
@@ -109,7 +145,7 @@ automation:
     id: garden_motion_light
     description: >
       Turn the Garden floodlight on for two minutes when Ring reports motion
-      between 21:00 and 05:00. Further motion restarts the two-minute delay.
+      after sunset. Further motion restarts the two-minute delay.
     mode: restart
     trigger:
       - platform: state
@@ -127,12 +163,12 @@ automation:
       - condition: state
         entity_id: timer.garden_motion_pause
         state: "idle"
+      - condition: state
+        entity_id: input_boolean.garden_manual_light_15m
+        state: "off"
       - condition: template
         value_template: >
-          {{
-            now().strftime('%H:%M:%S') >= '21:00:00'
-            or now().strftime('%H:%M:%S') < '05:00:00'
-          }}
+          {{ is_state('sun.sun', 'below_horizon') }}
     action:
       - action: light.turn_on
         target:
@@ -142,19 +178,70 @@ automation:
         target:
           entity_id: light.garden_light
 
+  - alias: Garden - Manual Light Start
+    id: garden_manual_light_start
+    description: >
+      Turn the garden light on manually and keep it on for 15 minutes.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: input_boolean.garden_manual_light_15m
+        to: "on"
+    action:
+      - action: light.turn_on
+        target:
+          entity_id: light.garden_light
+      - action: timer.start
+        target:
+          entity_id: timer.garden_manual_light_15m
+        data:
+          duration: "00:15:00"
+
+  - alias: Garden - Manual Light Stop
+    id: garden_manual_light_stop
+    description: >
+      Allow manual cancellation before the 15-minute timer finishes.
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_boolean.garden_manual_light_15m
+        to: "off"
+    action:
+      - action: timer.cancel
+        target:
+          entity_id: timer.garden_manual_light_15m
+      - action: light.turn_off
+        target:
+          entity_id: light.garden_light
+
+  - alias: Garden - Manual Light Timeout
+    id: garden_manual_light_timeout
+    description: >
+      Turn off the garden light once the manual 15-minute timer completes.
+    mode: single
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.garden_manual_light_15m
+    action:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.garden_manual_light_15m
+      - action: light.turn_off
+        target:
+          entity_id: light.garden_light
+
   - alias: Garden - Reapply Motion Policy
     id: garden_reapply_motion_policy
     description: >
       Apply the garden motion policy when a pause starts, finishes, or is
-      cancelled, when Ring reports the motion switch has changed, or when the
-      master control changes. An idle timer restores the normal home/time
-      policy only while the master control is enabled.
+      cancelled, or when the master control changes. An idle timer restores
+      the normal home/time policy only while the master control is enabled.
     mode: restart
     trigger:
       - platform: state
         entity_id: timer.garden_motion_pause
-      - platform: state
-        entity_id: switch.garden_motion_detection
       - platform: state
         entity_id: input_boolean.garden_automation_enabled
     action:

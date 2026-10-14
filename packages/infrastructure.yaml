@@ -361,8 +361,18 @@ script:
           title: "Infrastructure publisher checks requested"
           message: >-
             Requested deployment status checks on 192.168.100.96 and
-            192.168.100.99. Review Home Assistant logs for command output and
-            host-level failures.
+            192.168.100.99 at {{ now().strftime('%Y-%m-%d %H:%M:%S') }}.
+
+            Current snapshot:
+            - Jellyfin host reachable: {{ states('binary_sensor.jellyfin_raspberry_pi') }}
+            - Jellyfin runtime health: {{ states('sensor.jellyfin_runtime') }}
+            - Network services host reachable: {{ states('binary_sensor.network_services_raspberry_pi') }}
+            - Pi-hole Docker health: {{ states('sensor.pi_hole_docker_health') }}
+            - WireGuard telemetry: {{ states('sensor.wireguard_telemetry_status') }}
+
+            Note: If these values stay unavailable after running checks, verify
+            SSH key access from Home Assistant to 192.168.100.96 and
+            192.168.100.99.
 
   infrastructure_refresh_publisher_telemetry:
     alias: Infrastructure - Refresh Publisher Telemetry
@@ -379,7 +389,12 @@ script:
           title: "Infrastructure telemetry refresh requested"
           message: >-
             Started one-shot publisher services on 192.168.100.96 and
-            192.168.100.99.
+            192.168.100.99 at {{ now().strftime('%Y-%m-%d %H:%M:%S') }}.
+
+            Current snapshot:
+            - Jellyfin runtime health: {{ states('sensor.jellyfin_runtime') }}
+            - Pi-hole Docker health: {{ states('sensor.pi_hole_docker_health') }}
+            - WireGuard telemetry: {{ states('sensor.wireguard_telemetry_status') }}
 
 automation:
   - id: infrastructure_refresh_publishers_when_telemetry_missing
@@ -407,3 +422,11 @@ automation:
         state: "on"
     action:
       - action: script.infrastructure_refresh_publisher_telemetry
+      - action: persistent_notification.create
+        data:
+          notification_id: infrastructure_auto_recover_triggered
+          title: "Infrastructure auto-recover triggered"
+          message: >-
+            Auto-recover ran at {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+            because {{ trigger.entity_id }} reported
+            {{ trigger.to_state.state if trigger.to_state is not none else 'unknown' }}.

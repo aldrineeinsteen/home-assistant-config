@@ -7,8 +7,28 @@ views:
       - type: heading
         heading: Quick Controls
         icon: mdi:flash
-      - type: horizontal-stack
+      - type: grid
+        columns: 3
+        square: false
         cards:
+          - type: button
+            entity: light.garden_light
+            name: Garden Light 15m
+            icon: mdi:light-flood-up
+            show_state: true
+            tap_action:
+              action: perform-action
+              perform_action: input_boolean.toggle
+              target:
+                entity_id: input_boolean.garden_manual_light_15m
+            hold_action:
+              action: perform-action
+              perform_action: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.garden_manual_light_15m
+            state:
+              - value: "on"
+                color: amber
           - type: button
             entity: switch.smart_plug_mini_4
             name: Hive Hub
@@ -33,6 +53,63 @@ views:
             icon: mdi:printer-3d
             tap_action:
               action: toggle
+          - type: button
+            entity: switch.top_lights_seed_rack_socket_1
+            name: Grow Lights Top Rack
+            icon: mdi:led-strip-variant
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.bottom_lights_seed_rack_socket_1
+            name: Grow Lights Bottom Rack
+            icon: mdi:led-strip-variant
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.heated_propagator_socket_1
+            name: Heated Propagator
+            icon: mdi:radiator
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.wifi_smart_switch_switch_1
+            name: Front Garden Switch 1
+            icon: mdi:light-switch
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.wifi_smart_switch_switch_2
+            name: Front Garden Switch 2
+            icon: mdi:light-switch
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.spare_socket_socket_1
+            name: Spare Socket
+            icon: mdi:power-socket-uk
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.front_door_motion_detection
+            name: Front Door Motion
+            icon: mdi:motion-sensor
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.front_door_in_home_chime
+            name: Door Chime
+            icon: mdi:bell-ring
+            tap_action:
+              action: toggle
+          - type: button
+            entity: switch.garden_motion_detection
+            name: Garden Motion
+            icon: mdi:motion-sensor
+            tap_action:
+              action: perform-action
+              perform_action: switch.toggle
+              target:
+                entity_id: switch.garden_motion_detection
       - type: heading
         heading: Grow Setup
         icon: mdi:sprout
