@@ -273,3 +273,95 @@ views:
           - entity: >-
               event.octopus_energy_gas_e6e12701832423_7436504601_previous_day_rates
             name: Previous Day Rates
+  - title: Ground Floor
+    path: ground-floor
+    icon: mdi:floor-plan
+    theme: Backend-selected
+    cards:
+      - type: heading
+        heading: Ground Floor Heating
+        icon: mdi:home-floor-1
+      - type: history-graph
+        title: Ground Floor Average Temperature
+        hours_to_show: 24
+        entities:
+          - entity: sensor.ground_floor_avg_temperature
+            name: Ground Floor Avg
+      - type: history-graph
+        title: Ground Floor TRV Temperatures
+        hours_to_show: 24
+        entities:
+          - entity: sensor.heating_utility_room_current_temperature
+            name: Utility Room TRV
+          - entity: sensor.heating_dining_room_current_temperature
+            name: Dining Room TRV
+      - type: history-graph
+        title: Ground Floor Heating On / Demand
+        hours_to_show: 24
+        entities:
+          - entity: binary_sensor.heating_ground_floor_demand
+            name: Ground Floor Demand
+          - entity: binary_sensor.heating_dining_room_demand
+            name: Dining Room Demand
+  - title: First Floor
+    path: first-floor
+    icon: mdi:home-floor-1
+    theme: Backend-selected
+    cards:
+      - type: heading
+        heading: First Floor Heating
+        icon: mdi:home-floor-2
+      - type: history-graph
+        title: First Floor Average Temperature
+        hours_to_show: 24
+        entities:
+          - entity: sensor.first_floor_avg_temperature
+            name: Master + Closet Avg
+      - type: history-graph
+        title: Master Bedroom + Closet Room TRV Temperatures
+        hours_to_show: 24
+        entities:
+          - entity: sensor.heating_master_bedroom_1_current_temperature
+            name: Master Bedroom 1 TRV
+          - entity: sensor.heating_master_bedroom_2_current_temperature
+            name: Master Bedroom 2 TRV
+          - entity: sensor.heating_master_bedroom_3_current_temperature
+            name: Master Bedroom 3 TRV
+      - type: history-graph
+        title: First Floor Heating On / Demand
+        hours_to_show: 24
+        entities:
+          - entity: binary_sensor.heating_first_floor_demand
+            name: First Floor Demand
+  - title: Second Floor
+    path: second-floor
+    icon: mdi:home-floor-2
+    theme: Backend-selected
+    cards:
+      - type: heading
+        heading: Second Floor Heating
+        icon: mdi:home-floor-3
+      - type: history-graph
+        title: Second Floor Average Temperature
+        hours_to_show: 24
+        entities:
+          - entity: sensor.second_floor_avg_temperature
+            name: Second Floor Avg
+      - type: history-graph
+        title: Chris & Keona TRV Temperatures
+        hours_to_show: 24
+        entities:
+          - entity: sensor.heating_chris_room_current_temperature
+            name: Chris Room TRV
+          - entity: sensor.heating_keona_bedroom_1_current_temperature
+            name: Keona Bedroom 1 TRV
+          - entity: sensor.heating_keona_bedroom_2_current_temperature
+            name: Keona Bedroom 2 TRV
+      - type: history-graph
+        title: Second Floor Heating On / Demand
+        hours_to_show: 24
+        entities:
+          - entity: binary_sensor.heating_chris_room_demand
+            name: Chris Room Demand
+          - entity: binary_sensor.heating_keona_room_demand
+            name: Keona Room Demand
